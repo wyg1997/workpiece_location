@@ -33,7 +33,7 @@ class Trainer:
 
         self.model = FCNs(pretrained_net=vgg_model, n_class=len(self.classes)+1)
 
-        logger.info(f"model: \n{self.model}")
+        self.logger.info(f"model: \n{self.model}")
 
         # criterion
         self.criterion = nn.MSELoss()
@@ -72,29 +72,37 @@ class Trainer:
                          f"loss {self.running_loss.avg:.3f}")
         print()
 
+    def training_epoch(self):
+        for i, (imgs, targets) in enumerate(self.train_dataloader):
+            imgs = Variable(imgs).cuda()
+            targets = Variable(targets).cuda()
+
+            self.optimizer.zero_grad()
+            outputs = self.model(imgs)
+            loss = self.criterion(outputs, targets)
+            loss.backward()
+            self.optimizer.step()
+
+            loss = loss.item()
+            self.logger.info(f"Epoch {self.current_epoch} | "
+                             f"Iter {i+1}/{len(self.train_dataloader)} | "
+                             f"loss {loss:.4f}")
+
+            self.running_loss.update(loss)
+            self.global_step += 1
+            self.vis.line(Y=np.array([loss]),
+                          X=np.array([self.global_step]),
+                          win='train_loss',
+                          update=None if self.global_step==0 else 'append')
+
+
     def train(self):
         self.on_train_begin()
 
         for epoch in range(self.max_epochs):
             self.on_epoch_begin()
 
-            # epoch
-            for i, (imgs, targets) in enumerate(self.train_dataloader):
-                imgs = Variable(imgs).cuda()
-                targets = Variable(targets).cuda()
-
-                self.optimizer.zero_grad()
-                outputs = self.model(imgs)
-                loss = self.criterion(outputs, targets)
-                loss.backward()
-                self.optimizer.step()
-
-                self.logger.info(f"Epoch {self.current_epoch} | "
-                                 f"Iter {i+1}/{len(self.train_dataloader)} | "
-                                 f"loss {loss:.4f}")
-
-                self.running_loss.update(loss)
-                self.global_step += 1
+            self.training_epoch()
 
             self.on_epoch_end()
             self.save_checkpoints()
