@@ -68,7 +68,7 @@ class Trainer:
 
         print()
         self.logger.info(f"Epoch {self.current_epoch} | "
-                         f"time {seconds:d}s | "
+                         f"time {mins:d}min:{seconds:d}s | "
                          f"loss {self.running_loss.avg:.3f}")
         print()
 
@@ -83,10 +83,14 @@ class Trainer:
             loss.backward()
             self.optimizer.step()
 
+            # cost time
+            cost_time = time.time() - start_time
+
             loss = loss.item()
             self.logger.info(f"Epoch {self.current_epoch} | "
                              f"Iter {i+1}/{len(self.train_dataloader)} | "
-                             f"loss {loss:.4f}")
+                             f"loss {loss:.4f} | "
+                             f"time {cost_time*1000:.0f}ms")
 
             self.running_loss.update(loss)
             self.global_step += 1
