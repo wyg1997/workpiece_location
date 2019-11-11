@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 # coding=utf-8
 
+import copy
+
 import torchvision.transforms as T
 import cv2
 import torch
 import numpy as np
-
+from utils.cprint import cprint
 
 
 def build_transforms(cfg, is_train):
@@ -23,6 +25,7 @@ class Pipline:
         self.is_train = is_train
 
     def __call__(self, results, num_cls):
+        # opencv shape [h, w, c]
         img = cv2.imread(results['img_info']['filename'])
         # to rbg
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -38,7 +41,7 @@ class Pipline:
         # resize img
         img = cv2.resize(img, (new_w, new_h))
         # resize labels
-        ann = results['img_info']['ann']
+        ann = copy.deepcopy(results['img_info']['ann'])
         ann['locations'] = ann['locations'].astype(np.float) * [r_w, r_h];
 
         # TODO: do flip
@@ -55,7 +58,7 @@ class Pipline:
         img = img.transpose((2, 0, 1)).astype(np.float32)
 
         targets = self.get_gussian_targets(
-                    results,
+                    ann,
                     new_h,
                     new_w,
                     self.cfg.STRIDE,
@@ -92,11 +95,11 @@ class Pipline:
         heatmap = np.exp(-exponent)
         return heatmap
 
-    def get_gussian_targets(self, results, H, W, stride, sigma, num_cls):
+    def get_gussian_targets(self, ann, H, W, stride, sigma, num_cls):
         heatmaps = np.zeros((num_cls, H, W)).astype(np.float32)
 
-        points = results['img_info']['ann']['locations']
-        labels = results['img_info']['ann']['labels']
+        points = ann['locations']
+        labels = ann['labels']
         num_points = points.shape[0]
 
         for i in range(num_points):

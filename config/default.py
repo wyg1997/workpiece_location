@@ -58,7 +58,7 @@ _C.TRAIN.MAX_LIGHTNING = 0.2
 _C.TRAIN.P_LIGHTNING = 0.75
 # heatmap parameters
 _C.TRAIN.STRIDE = 1
-_C.TRAIN.SIGMA = 1 # !!!!!!
+_C.TRAIN.SIGMA = 5
 
 
 ###############

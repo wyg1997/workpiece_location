@@ -17,6 +17,7 @@ from datasets.build import get_dataloader
 from models.FCN import FCNs, VGGNet
 from utils.meters import AverageMeter
 from utils.cprint import cprint
+from utils.visualize import visualize
 
 
 class Trainer:
@@ -73,9 +74,10 @@ class Trainer:
         print()
 
     def training_epoch(self):
-        for i, (imgs, targets) in enumerate(self.train_dataloader):
-            imgs = Variable(imgs).cuda()
-            targets = Variable(targets).cuda()
+        for i, (ori_imgs, ori_targets) in enumerate(self.train_dataloader):
+            start_time = time.time()
+            imgs = Variable(ori_imgs).cuda()
+            targets = Variable(ori_targets).cuda()
 
             self.optimizer.zero_grad()
             outputs = self.model(imgs)
@@ -98,6 +100,12 @@ class Trainer:
                           X=np.array([self.global_step]),
                           win='train_loss',
                           update=None if self.global_step==0 else 'append')
+
+            # see train data
+            if i == 0:
+                vis_images = visualize(ori_imgs, ori_targets,
+                          mean=self.cfg.TRAIN.MEAN, std=self.cfg.TRAIN.STD)
+                self.vis.images(vis_images)
 
 
     def train(self):
