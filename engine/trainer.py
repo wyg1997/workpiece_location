@@ -14,7 +14,6 @@ import torch.optim as optim
 from torch.autograd import Variable
 
 from datasets.build import get_dataloader
-from models.FCN import FCNs, VGGNet
 from utils.meters import AverageMeter
 from utils.cprint import cprint
 from utils.visualize import visualize
@@ -27,21 +26,28 @@ class Trainer:
         # dataloader
         self.train_dataloader, self.val_dataloader, self.classes = get_dataloader(cfg)
         self.num_cls = len(self.classes) + 1
-        logger.info(f"classes: {self.classes}")
+        self.logger.info(f"classes: {self.classes}")
 
         # model
-        vgg_model = VGGNet(requires_grad=True, show_params=False)
+        # hg
+        from models.hg import hg
+        self.model = hg(num_stacks=4,
+                        num_blocks=4,
+                        num_classes=5,
+                        resnet_layers=50)
 
-        self.model = FCNs(pretrained_net=vgg_model, n_class=len(self.classes)+1)
-
-        self.logger.info(f"model: \n{self.model}")
+        # self.logger.info(f"model: \n{self.model}")
 
         # criterion
         self.criterion = nn.MSELoss()
 
         # TODO: support more optimizer
         # optimizer
-        self.optimizer = optim.SGD(self.model.parameters(), lr=1e-2, momentum=0.7)
+        self.base_lr = 1e-4
+        self.optimizer = optim.RMSprop(self.model.parameters(),
+                                   lr=self.base_lr,
+                                   momentum=0,
+                                   weight_decay=0)
 
         self._construct()
 
@@ -58,6 +64,15 @@ class Trainer:
         self.running_loss = AverageMeter()
 
     def on_epoch_begin(self):
+        # opt
+        # TODO: put it in config file
+        if self.current_epoch in [24, 48, 56, 72]:
+            self.base_lr *= 0.5
+            self.optimizer = optim.RMSprop(self.model.parameters(),
+                                       lr=self.base_lr,
+                                       momentum=0,
+                                       weight_decay=0)
+
         self.current_epoch += 1
         self.time0 = time.time()
         self.running_loss.reset()
@@ -81,7 +96,11 @@ class Trainer:
 
             self.optimizer.zero_grad()
             outputs = self.model(imgs)
-            loss = self.criterion(outputs, targets)
+
+            loss = self.criterion(outputs[0], targets)
+            for j in range(1, len(outputs)):
+                loss += self.criterion(outputs[j], targets)
+
             loss.backward()
             self.optimizer.step()
 
@@ -101,11 +120,26 @@ class Trainer:
                           win='train_loss',
                           update=None if self.global_step==0 else 'append')
 
-            # see train data
+            # # see train data
+            # if i == 0:
+            #     vis_images = visualize(ori_imgs, ori_targets,
+            #                            stride=self.cfg.TRAIN.STRIDE,
+            #                            mean=self.cfg.TRAIN.MEAN,
+            #                            std=self.cfg.TRAIN.STD)
+            #     self.vis.images(vis_images, win='label_iter0',
+            #                     opts=dict(title='train iter0'))
+
+            # see train results
             if i == 0:
-                vis_images = visualize(ori_imgs, ori_targets,
-                          mean=self.cfg.TRAIN.MEAN, std=self.cfg.TRAIN.STD)
-                self.vis.images(vis_images)
+                results = outputs[-1].cpu().detach()
+                results[results<0.3] = 0
+                vis_images = visualize(ori_imgs, results,
+                                       stride=self.cfg.TRAIN.STRIDE,
+                                       mean=self.cfg.TRAIN.MEAN,
+                                       std=self.cfg.TRAIN.STD,
+                                       alpha=0.8)
+                self.vis.images(vis_images, win='test_iter0',
+                                opts=dict(title='test iter0'))
 
 
     def train(self):

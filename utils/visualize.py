@@ -45,10 +45,12 @@ def visualize(imgs, targets=None, stride=1, mean=[0, 0, 0], std=[1, 1, 1], alpha
     imgs = (imgs*std + mean)*255
     imgs = imgs.astype(np.uint8)
 
-    targets = targets.max(axis=1) # shape [n, w, h]
+    targets_cls = np.argmax(targets, axis=1) # shape [n, h, w]
+    targets = targets[:, 1:].max(axis=1) # shape [n, h, w]
+    targets[targets_cls==0] = 0
     targets = targets*255
     targets = targets.astype(np.uint8)
-    targets = targets[..., np.newaxis] # shape [n, w, h, c=1]
+    targets = targets[..., np.newaxis] # shape [n, h, w, c=1]
 
     for i in range(num_images):
         heatmap = cv2.applyColorMap(targets[i], cv2.COLORMAP_HOT)
