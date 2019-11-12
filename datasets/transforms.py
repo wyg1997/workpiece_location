@@ -78,8 +78,6 @@ class Pipline:
         Outputs:
             target: 这个中心点的热力图。
         """
-        assert H % stride == 0 and W % stride == 0
-
         map_h = H // stride
         map_w = W // stride
 
@@ -96,7 +94,13 @@ class Pipline:
         return heatmap
 
     def get_gussian_targets(self, ann, H, W, stride, sigma, num_cls):
-        heatmaps = np.zeros((num_cls, H, W)).astype(np.float32)
+        """
+        Outputs:
+            heatmaps: The heatmaps of labels with shape [n, num_cls, h, w].
+        """
+        assert H % stride == 0 and W % stride == 0
+
+        heatmaps = np.zeros((num_cls, H//stride, W//stride)).astype(np.float32)
 
         points = ann['locations']
         labels = ann['labels']
