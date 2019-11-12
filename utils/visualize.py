@@ -2,6 +2,7 @@
 # coding=utf-8
 
 import torch
+import torch.nn.functional as F
 from visdom import Visdom
 import numpy as np
 import cv2
@@ -14,23 +15,25 @@ _color_map = [
     'Magma',
 ]
 
-def visualize(imgs, targets=None, mean=[0, 0, 0], std=[1, 1, 1], alpha=0.5):
+def visualize(imgs, targets=None, stride=1, mean=[0, 0, 0], std=[1, 1, 1], alpha=0.5):
     """
     Show image and target.
 
     Input:
-        imgs: torch image with shape [n, c, w, h].
-        targets: heatmaps with images with shape [n, k, w, h],
+        imgs: torch image with shape [n, c, h, w].
+        targets: heatmaps with images with shape [n, k, h, w],
             k is the number of classes include background.
         mean: images mean.
         std: images std.
         alpha: heatmap weight.
 
     Output:
-        show_imgs: The images will be showed with shape [n, c, w, h] with type `numpy`.
+        show_imgs: The images will be showed with shape [n, c, h, w] with type `numpy`.
     """
-    assert imgs.shape[0] == targets.shape[0], \
-            'the number of images and targets must be same'
+    assert imgs.shape[-2] == targets.shape[-2]*stride and \
+           imgs.shape[-1] == targets.shape[-1]*stride
+
+    targets = F.interpolate(targets, scale_factor=stride, mode='bicubic', align_corners=False)
     
     # tensor to numpy
     imgs = imgs.numpy()
