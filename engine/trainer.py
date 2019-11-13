@@ -100,11 +100,13 @@ class Trainer:
 
             loss = loss.item()
             current_lr = self.optimizer.param_groups[0]['lr']
-            self.logger.info(f"Epoch: {self.current_epoch} | "
-                             f"Iter: {i+1}/{len(self.train_dataloader)} | "
-                             f"lr: {current_lr:.2e} | "
-                             f"loss: {loss:.4f} | "
-                             f"time: {cost_time*1000:.0f}ms")
+            # write log
+            if i % self.cfg.SOLVER.LOG_INTERVAL == 0:
+                self.logger.info(f"Epoch: {self.current_epoch} | "
+                                 f"Iter: {i+1}/{len(self.train_dataloader)} | "
+                                 f"lr: {current_lr:.2e} | "
+                                 f"loss: {loss:.4f} | "
+                                 f"time: {cost_time*1000:.0f}ms")
 
             self.running_loss.update(loss)
             self.global_step += 1

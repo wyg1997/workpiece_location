@@ -115,8 +115,9 @@ _C.SOLVER.WARMUP_FACTOR = 0.1
 _C.SOLVER.WARMUP_ITERS = 10
 _C.SOLVER.WARMUP_METHOD = 'linear'
 # log
-# TODO: not support
 _C.SOLVER.LOG_INTERVAL = 10
+# eval
+# TODO: support eval
 _C.SOLVER.EVAL_EPOCH = 20
 
 
