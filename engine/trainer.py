@@ -17,6 +17,7 @@ from datasets.build import get_dataloader
 from utils.meters import AverageMeter
 from utils.cprint import cprint
 from utils.visualize import visualize
+from solver.build import make_optimizer, make_lr_scheduler
 
 
 class Trainer:
@@ -41,13 +42,10 @@ class Trainer:
         # criterion
         self.criterion = nn.MSELoss()
 
-        # TODO: support more optimizer
         # optimizer
-        self.base_lr = 1e-4
-        self.optimizer = optim.RMSprop(self.model.parameters(),
-                                   lr=self.base_lr,
-                                   momentum=0,
-                                   weight_decay=0)
+        self.optimizer = make_optimizer(cfg.SOLVER, self.model)
+        # lr scheduler
+        self.lr_scheduler = make_lr_scheduler(cfg.SOLVER, self.optimizer)
 
         self._construct()
 
@@ -64,15 +62,6 @@ class Trainer:
         self.running_loss = AverageMeter()
 
     def on_epoch_begin(self):
-        # opt
-        # TODO: put it in config file
-        if self.current_epoch in [24, 48, 56, 72]:
-            self.base_lr *= 0.5
-            self.optimizer = optim.RMSprop(self.model.parameters(),
-                                       lr=self.base_lr,
-                                       momentum=0,
-                                       weight_decay=0)
-
         self.current_epoch += 1
         self.time0 = time.time()
         self.running_loss.reset()
@@ -81,11 +70,13 @@ class Trainer:
         elapsed = time.time() - self.time0
         mins = int(elapsed) // 60
         seconds = int(elapsed - mins*60)
+        # step lr
+        self.lr_scheduler.step()
 
         print()
-        self.logger.info(f"Epoch {self.current_epoch} | "
-                         f"time {mins:d}min:{seconds:d}s | "
-                         f"loss {self.running_loss.avg:.3f}")
+        self.logger.info(f"Epoch: {self.current_epoch} | "
+                         f"time: {mins:d}min:{seconds:d}s | "
+                         f"loss: {self.running_loss.avg:.5f}")
         print()
 
     def training_epoch(self):
@@ -108,26 +99,34 @@ class Trainer:
             cost_time = time.time() - start_time
 
             loss = loss.item()
-            self.logger.info(f"Epoch {self.current_epoch} | "
-                             f"Iter {i+1}/{len(self.train_dataloader)} | "
-                             f"loss {loss:.4f} | "
-                             f"time {cost_time*1000:.0f}ms")
+            current_lr = self.optimizer.param_groups[0]['lr']
+            self.logger.info(f"Epoch: {self.current_epoch} | "
+                             f"Iter: {i+1}/{len(self.train_dataloader)} | "
+                             f"lr: {current_lr:.2e} | "
+                             f"loss: {loss:.4f} | "
+                             f"time: {cost_time*1000:.0f}ms")
 
             self.running_loss.update(loss)
             self.global_step += 1
+            # loss line
             self.vis.line(Y=np.array([loss]),
                           X=np.array([self.global_step]),
                           win='train_loss',
-                          update=None if self.global_step==0 else 'append')
+                          update=None if self.global_step==1 else 'append')
+            # lr line
+            self.vis.line(Y=np.array([current_lr]),
+                          X=np.array([self.global_step]),
+                          win='lr',
+                          update=None if self.global_step==1 else 'append')
 
-            # # see train data
-            # if i == 0:
-            #     vis_images = visualize(ori_imgs, ori_targets,
-            #                            stride=self.cfg.TRAIN.STRIDE,
-            #                            mean=self.cfg.TRAIN.MEAN,
-            #                            std=self.cfg.TRAIN.STD)
-            #     self.vis.images(vis_images, win='label_iter0',
-            #                     opts=dict(title='train iter0'))
+            # see train data
+            if i == 0:
+                vis_images = visualize(ori_imgs, ori_targets,
+                                       stride=self.cfg.TRAIN.STRIDE,
+                                       mean=self.cfg.TRAIN.MEAN,
+                                       std=self.cfg.TRAIN.STD)
+                self.vis.images(vis_images, win='label',
+                                opts=dict(title='label'))
 
             # see train results
             if i == 0:
@@ -137,9 +136,9 @@ class Trainer:
                                        stride=self.cfg.TRAIN.STRIDE,
                                        mean=self.cfg.TRAIN.MEAN,
                                        std=self.cfg.TRAIN.STD,
-                                       alpha=0.8)
-                self.vis.images(vis_images, win='test_iter0',
-                                opts=dict(title='test iter0'))
+                                       alpha=0.7)
+                self.vis.images(vis_images, win='train_results',
+                                opts=dict(title='train_results'))
 
 
     def train(self):

@@ -174,9 +174,9 @@ class HourglassNet(nn.Module):
             y = self.res[i](y)
             y = self.fc[i](y)
             score = self.score[i](y)  # [8, 14, 64, 64]
-            score = nn.functional.softmax(score, dim=1)
+            out_score = nn.functional.softmax(score, dim=1)
             # print("score.size:", score.size(), i)
-            out.append(score)
+            out.append(out_score)
             if i < self.num_stacks - 1:
                 fc_ = self.fc_[i](y)
                 score_ = self.score_[i](score)

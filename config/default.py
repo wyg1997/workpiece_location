@@ -101,10 +101,9 @@ _C.DATALOADER.WORKERS = 8
 ##########
 
 _C.SOLVER = CN()
-# TODO: not supporting
-_C.SOLVER.OPT = 'adam'
 _C.SOLVER.EPOCHS = 30
-# TODO: not supporting
+# choice optimizer
+_C.SOLVER.OPT = 'adam'
 _C.SOLVER.BASE_LR = 0.001
 _C.SOLVER.MOMENTUM = 0.9
 _C.SOLVER.WEIGHT_DECAY = 0.0005
@@ -116,6 +115,7 @@ _C.SOLVER.WARMUP_FACTOR = 0.1
 _C.SOLVER.WARMUP_ITERS = 10
 _C.SOLVER.WARMUP_METHOD = 'linear'
 # log
+# TODO: not support
 _C.SOLVER.LOG_INTERVAL = 10
 _C.SOLVER.EVAL_EPOCH = 20
 
