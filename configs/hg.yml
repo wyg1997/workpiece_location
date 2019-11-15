@@ -1,0 +1,46 @@
+MODEL:
+    NAME: 'baseline'
+    VERSION: 'v0'
+
+
+TRAIN:
+    DATA_ROOT: 'data/type-c/train'
+    SIZE: [256, 320]
+    MEAN: [0.152, 0.152, 0.152]
+    STD: [0.251, 0.251, 0.251]
+    IMG_TYPE: 'png'
+    STRIDE: 4
+    SIGMA: 3
+
+
+TEST:
+    DATA_ROOT: 'data/type-c/train'
+    SIZE: [256, 320]
+    MEAN: [0.152, 0.152, 0.152]
+    STD: [0.251, 0.251, 0.251]
+    IMG_TYPE: 'png'
+
+
+DATALOADER:
+    BATCH_SIZE: 4
+    WORKERS: 0
+
+
+SOLVER:
+    EPOCHS: 80
+    OPT: 'rmsprop'
+    BASE_LR: 0.0001
+    MOMENTUM: 0.9
+    WEIGHT_DECAY: 0.0005
+    # step
+    GAMMA: 0.1
+    STEPS: [24, 48, 72]
+    # warm up
+    WARMUP_FACTOR: 0.33
+    WARMUP_ITERS: 6
+    WARMUP_METHOD: 'linear'
+    # log
+    LOG_INTERVAL: 1
+    # save model
+    CHECKPOINT: 10
+
