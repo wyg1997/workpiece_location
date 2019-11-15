@@ -152,7 +152,9 @@ class Trainer:
             self.training_epoch()
 
             self.on_epoch_end()
-            self.save_checkpoints()
+            
+            if (epoch+1) % self.cfg.SOLVER.CHECKPOINT == 0:
+                self.save_checkpoints()
 
             torch.cuda.empty_cache()
 

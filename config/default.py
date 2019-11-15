@@ -119,6 +119,8 @@ _C.SOLVER.LOG_INTERVAL = 10
 # eval
 # TODO: support eval
 _C.SOLVER.EVAL_EPOCH = 20
+# save model
+_C.SOLVER.CHECKPOINT = 10
 
 
 ##########
