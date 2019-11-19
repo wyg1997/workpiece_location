@@ -30,12 +30,16 @@ class Trainer:
         self.logger.info(f"classes: {self.classes}")
 
         # model
-        # hg
-        from models.hg import hg
-        self.model = hg(num_stacks=4,
-                        num_blocks=4,
-                        num_classes=5,
-                        resnet_layers=50)
+        # fcn
+        from models.FCN import fcn
+        self.model = fcn(True, self.num_cls)
+
+        # # hg
+        # from models.hg import hg
+        # self.model = hg(num_stacks=4,
+        #                 num_blocks=4,
+        #                 num_classes=5,
+        #                 resnet_layers=50)
 
         # self.logger.info(f"model: \n{self.model}")
 
@@ -58,6 +62,7 @@ class Trainer:
     def on_train_begin(self):
         self.model = self.model.cuda()
         self.model.train()
+        self.criterion = self.criterion.cuda()
 
         self.running_loss = AverageMeter()
 
@@ -88,9 +93,7 @@ class Trainer:
             self.optimizer.zero_grad()
             outputs = self.model(imgs)
 
-            loss = self.criterion(outputs[0], targets)
-            for j in range(1, len(outputs)):
-                loss += self.criterion(outputs[j], targets)
+            loss = self.criterion(outputs, targets)
 
             loss.backward()
             self.optimizer.step()
@@ -132,7 +135,7 @@ class Trainer:
 
             # see train results
             if i == 0:
-                results = outputs[-1].cpu().detach()
+                results = outputs.cpu().detach()
                 results[results<0.3] = 0
                 vis_images = visualize(ori_imgs, results,
                                        stride=self.cfg.TRAIN.STRIDE,

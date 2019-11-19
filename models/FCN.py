@@ -1,258 +1,130 @@
-#!/usr/bin/env python
-# coding=utf-8
-
-import torch
 import torch.nn as nn
-from torchvision import models
-from torchvision.models.vgg import VGG
+import math
+from torch import clamp 
+import torch.utils.model_zoo as model_zoo
 
+__all__ = ['fcn']
 
-class FCN32s(nn.Module):
-
-    def __init__(self, pretrained_net, n_class):
-        super().__init__()
-        self.n_class = n_class
-        self.pretrained_net = pretrained_net
-        self.relu    = nn.ReLU(inplace=True)
-        self.deconv1 = nn.ConvTranspose2d(512, 512, kernel_size=3, stride=2, padding=1, dilation=1, output_padding=1)
-        self.bn1     = nn.BatchNorm2d(512)
-        self.deconv2 = nn.ConvTranspose2d(512, 256, kernel_size=3, stride=2, padding=1, dilation=1, output_padding=1)
-        self.bn2     = nn.BatchNorm2d(256)
-        self.deconv3 = nn.ConvTranspose2d(256, 128, kernel_size=3, stride=2, padding=1, dilation=1, output_padding=1)
-        self.bn3     = nn.BatchNorm2d(128)
-        self.deconv4 = nn.ConvTranspose2d(128, 64, kernel_size=3, stride=2, padding=1, dilation=1, output_padding=1)
-        self.bn4     = nn.BatchNorm2d(64)
-        self.deconv5 = nn.ConvTranspose2d(64, 32, kernel_size=3, stride=2, padding=1, dilation=1, output_padding=1)
-        self.bn5     = nn.BatchNorm2d(32)
-        self.classifier = nn.Conv2d(32, n_class, kernel_size=1)
-
-    def forward(self, x):
-        output = self.pretrained_net(x)
-        x5 = output['x5']
-
-        score = self.bn1(self.relu(self.deconv1(x5)))     
-        score = self.bn2(self.relu(self.deconv2(score)))  
-        score = self.bn3(self.relu(self.deconv3(score)))  
-        score = self.bn4(self.relu(self.deconv4(score)))  
-        score = self.bn5(self.relu(self.deconv5(score)))  
-        score = self.classifier(score)                    
-
-        return score 
-
-
-class FCN16s(nn.Module):
-
-    def __init__(self, pretrained_net, n_class):
-        super().__init__()
-        self.n_class = n_class
-        self.pretrained_net = pretrained_net
-        self.relu    = nn.ReLU(inplace=True)
-        self.deconv1 = nn.ConvTranspose2d(512, 512, kernel_size=3, stride=2, padding=1, dilation=1, output_padding=1)
-        self.bn1     = nn.BatchNorm2d(512)
-        self.deconv2 = nn.ConvTranspose2d(512, 256, kernel_size=3, stride=2, padding=1, dilation=1, output_padding=1)
-        self.bn2     = nn.BatchNorm2d(256)
-        self.deconv3 = nn.ConvTranspose2d(256, 128, kernel_size=3, stride=2, padding=1, dilation=1, output_padding=1)
-        self.bn3     = nn.BatchNorm2d(128)
-        self.deconv4 = nn.ConvTranspose2d(128, 64, kernel_size=3, stride=2, padding=1, dilation=1, output_padding=1)
-        self.bn4     = nn.BatchNorm2d(64)
-        self.deconv5 = nn.ConvTranspose2d(64, 32, kernel_size=3, stride=2, padding=1, dilation=1, output_padding=1)
-        self.bn5     = nn.BatchNorm2d(32)
-        self.classifier = nn.Conv2d(32, n_class, kernel_size=1)
-
-    def forward(self, x):
-        output = self.pretrained_net(x)
-        x5 = output['x5']  
-        x4 = output['x4']  
-
-        score = self.relu(self.deconv1(x5))               
-        score = self.bn1(score + x4)                      
-        score = self.bn2(self.relu(self.deconv2(score)))  
-        score = self.bn3(self.relu(self.deconv3(score)))  
-        score = self.bn4(self.relu(self.deconv4(score)))  
-        score = self.bn5(self.relu(self.deconv5(score)))  
-        score = self.classifier(score)                   
-
-        return score  
-
-
-class FCN8s(nn.Module):
-
-    def __init__(self, pretrained_net, n_class):
-        super().__init__()
-        self.n_class = n_class
-        self.pretrained_net = pretrained_net
-        self.relu    = nn.ReLU(inplace=True)
-        self.deconv1 = nn.ConvTranspose2d(512, 512, kernel_size=3, stride=2, padding=1, dilation=1, output_padding=1)
-        self.bn1     = nn.BatchNorm2d(512)
-        self.deconv2 = nn.ConvTranspose2d(512, 256, kernel_size=3, stride=2, padding=1, dilation=1, output_padding=1)
-        self.bn2     = nn.BatchNorm2d(256)
-        self.deconv3 = nn.ConvTranspose2d(256, 128, kernel_size=3, stride=2, padding=1, dilation=1, output_padding=1)
-        self.bn3     = nn.BatchNorm2d(128)
-        self.deconv4 = nn.ConvTranspose2d(128, 64, kernel_size=3, stride=2, padding=1, dilation=1, output_padding=1)
-        self.bn4     = nn.BatchNorm2d(64)
-        self.deconv5 = nn.ConvTranspose2d(64, 32, kernel_size=3, stride=2, padding=1, dilation=1, output_padding=1)
-        self.bn5     = nn.BatchNorm2d(32)
-        self.classifier = nn.Conv2d(32, n_class, kernel_size=1)
-
-    def forward(self, x):
-        output = self.pretrained_net(x)
-        x5 = output['x5']  
-        x4 = output['x4']  
-        x3 = output['x3']  
-
-        score = self.relu(self.deconv1(x5))              
-        score = self.bn1(score + x4)                      
-        score = self.relu(self.deconv2(score))            
-        score = self.bn2(score + x3)                      
-        score = self.bn3(self.relu(self.deconv3(score)))  
-        score = self.bn4(self.relu(self.deconv4(score)))  
-        score = self.bn5(self.relu(self.deconv5(score)))  
-        score = self.classifier(score)                    
-
-        return score  
-
-
-class FCNs(nn.Module):
-
-    def __init__(self, pretrained_net, n_class):
-        super().__init__()
-        self.n_class = n_class
-        self.pretrained_net = pretrained_net
-        self.relu    = nn.ReLU(inplace=True)
-        self.deconv1 = nn.ConvTranspose2d(512, 512, kernel_size=3, stride=2, padding=1, dilation=1, output_padding=1)
-        self.bn1     = nn.BatchNorm2d(512)
-        self.deconv2 = nn.ConvTranspose2d(512, 256, kernel_size=3, stride=2, padding=1, dilation=1, output_padding=1)
-        self.bn2     = nn.BatchNorm2d(256)
-        self.deconv3 = nn.ConvTranspose2d(256, 128, kernel_size=3, stride=2, padding=1, dilation=1, output_padding=1)
-        self.bn3     = nn.BatchNorm2d(128)
-        self.deconv4 = nn.ConvTranspose2d(128, 64, kernel_size=3, stride=2, padding=1, dilation=1, output_padding=1)
-        self.bn4     = nn.BatchNorm2d(64)
-        self.deconv5 = nn.ConvTranspose2d(64, 32, kernel_size=3, stride=2, padding=1, dilation=1, output_padding=1)
-        self.bn5     = nn.BatchNorm2d(32)
-        self.classifier = nn.Conv2d(32, n_class, kernel_size=1) 
-        # classifier is 1x1 conv, to reduce channels from 32 to n_class
-
-    def forward(self, x):
-        output = self.pretrained_net(x)
-        x5 = output['x5']  
-        x4 = output['x4']  
-        x3 = output['x3']  
-        x2 = output['x2']  
-        x1 = output['x1']  
-
-        score = self.bn1(self.relu(self.deconv1(x5)))     
-        score = score + x4                                
-        score = self.bn2(self.relu(self.deconv2(score)))  
-        score = score + x3                                
-        score = self.bn3(self.relu(self.deconv3(score)))  
-        score = score + x2                                
-        score = self.bn4(self.relu(self.deconv4(score)))  
-        score = score + x1                                
-        score = self.bn5(self.relu(self.deconv5(score)))  
-        score = self.classifier(score)                    
-
-        return score  
-
-
-class VGGNet(VGG):
-    def __init__(self, pretrained=True, model='vgg16', requires_grad=True, remove_fc=True, show_params=False):
-        super().__init__(make_layers(cfg[model]))
-        self.ranges = ranges[model]
-
-        if pretrained:
-            exec("self.load_state_dict(models.%s(pretrained=True).state_dict())" % model)
-
-        if not requires_grad:
-            for param in super().parameters():
-                param.requires_grad = False
-
-        # delete redundant fully-connected layer params, can save memory
-        # 去掉vgg最后的全连接层(classifier)
-        if remove_fc:  
-            del self.classifier
-
-        if show_params:
-            for name, param in self.named_parameters():
-                print(name, param.size())
-
-    def forward(self, x):
-        output = {}
-        # get the output of each maxpooling layer (5 maxpool in VGG net)
-        for idx, (begin, end) in enumerate(self.ranges):
-        #self.ranges = ((0, 5), (5, 10), (10, 17), (17, 24), (24, 31)) (vgg16 examples)
-            for layer in range(begin, end):
-                x = self.features[layer](x)
-            output["x%d"%(idx+1)] = x
-
-        return output
-
-
-ranges = {
-    'vgg11': ((0, 3), (3, 6),  (6, 11),  (11, 16), (16, 21)),
-    'vgg13': ((0, 5), (5, 10), (10, 15), (15, 20), (20, 25)),
-    'vgg16': ((0, 5), (5, 10), (10, 17), (17, 24), (24, 31)),
-    'vgg19': ((0, 5), (5, 10), (10, 19), (19, 28), (28, 37))
+model_urls = {
+    'resnet34': 'https://download.pytorch.org/models/resnet34-333f7ec4.pth',
 }
 
-# Vgg-Net config 
-# Vgg网络结构配置
-cfg = {
-    'vgg11': [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
-    'vgg13': [64, 64, 'M', 128, 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
-    'vgg16': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M'],
-    'vgg19': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 512, 512, 512, 512, 'M', 512, 512, 512, 512, 'M'],
-}
+def conv3x3(in_planes, out_planes, stride=1):
+    """3x3 convolution with padding"""
+    return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
+                     padding=1, bias=False)
 
-# make layers using Vgg-Net config(cfg)
-# 由cfg构建vgg-Net
-def make_layers(cfg, batch_norm=False):
-    layers = []
-    in_channels = 3
-    for v in cfg:
-        if v == 'M':
-            layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
-        else:
-            conv2d = nn.Conv2d(in_channels, v, kernel_size=3, padding=1)
-            if batch_norm:
-                layers += [conv2d, nn.BatchNorm2d(v), nn.ReLU(inplace=True)]
-            else:
-                layers += [conv2d, nn.ReLU(inplace=True)]
-            in_channels = v
-    return nn.Sequential(*layers)
+class UpBlock(nn.Module):
+    def __init__(self, inplanes, planes, upsample=False):
+        super(UpBlock, self).__init__()
+        self.conv = nn.Conv2d(inplanes, planes, 1, 1)
+        self.bn = nn.BatchNorm2d(planes)
+        self.relu = nn.ReLU(inplace=True)
+        self.will_ups = upsample
 
-'''
-VGG-16网络参数
-Sequential(
-  (0): Conv2d(3, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
-  (1): ReLU(inplace)
-  (2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
-  (3): ReLU(inplace)
-  (4): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
-  (5): Conv2d(64, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
-  (6): ReLU(inplace)
-  (7): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
-  (8): ReLU(inplace)
-  (9): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
-  (10): Conv2d(128, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
-  (11): ReLU(inplace)
-  (12): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
-  (13): ReLU(inplace)
-  (14): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
-  (15): ReLU(inplace)
-  (16): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
-  (17): Conv2d(256, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
-  (18): ReLU(inplace)
-  (19): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
-  (20): ReLU(inplace)
-  (21): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
-  (22): ReLU(inplace)
-  (23): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
-  (24): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
-  (25): ReLU(inplace)
-  (26): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
-  (27): ReLU(inplace)
-  (28): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
-  (29): ReLU(inplace)
-  (30): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
-)
-'''
+    def forward(self, x):
+        if self.will_ups:
+            x = nn.functional.interpolate(x, 
+                scale_factor=2, mode="bilinear", align_corners=True)
+
+        x = self.conv(x)
+        x = self.bn(x)
+        x = self.relu(x)
+
+        return x
+
+class BasicBlock(nn.Module):
+    expansion = 1
+
+    def __init__(self, inplanes, planes, stride=1, downsample=None):
+        super(BasicBlock, self).__init__()
+        self.conv1 = conv3x3(inplanes, planes, stride)
+        self.bn1 = nn.BatchNorm2d(planes)
+        self.relu = nn.ReLU(inplace=True)
+        self.conv2 = conv3x3(planes, planes)
+        self.bn2 = nn.BatchNorm2d(planes)
+        self.downsample = downsample
+        self.stride = stride
+
+    def forward(self, x):
+        residual = x
+
+        out = self.conv1(x)
+        out = self.bn1(out)
+        out = self.relu(out)
+
+        out = self.conv2(out)
+        out = self.bn2(out)
+
+        if self.downsample is not None:
+            residual = self.downsample(x)
+
+        out += residual
+        out = self.relu(out)
+
+        return out
+
+class ResNet(nn.Module):
+
+    def __init__(self, block, layers, nparts):
+        self.inplanes = 64
+        super(ResNet, self).__init__()
+        self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3,
+                               bias=False)
+        self.bn1 = nn.BatchNorm2d(64)
+        self.relu = nn.ReLU(inplace=True)
+        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        self.layer1 = self._make_layer(block, 64, layers[0])
+        self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
+        self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
+        self.layer4 = self._make_layer(block, 512, layers[3], stride=1)
+
+        self.decoder = nn.Sequential(
+                UpBlock(512*block.expansion, 256, upsample=True),
+                UpBlock(256, 128, upsample=True),
+                UpBlock(128, 64, upsample=False),
+                nn.Conv2d(64, nparts, 1, 1),
+                #nn.LeakyReLU()
+                nn.Softmax(dim=1)
+                )
+        
+        
+    def _make_layer(self, block, planes, blocks, stride=1):
+        downsample = None
+        if stride != 1 or self.inplanes != planes * block.expansion:
+            downsample = nn.Sequential(
+                nn.Conv2d(self.inplanes, planes * block.expansion,
+                          kernel_size=1, stride=stride, bias=False),
+                nn.BatchNorm2d(planes * block.expansion),
+            )
+
+        layers = []
+        layers.append(block(self.inplanes, planes, stride, downsample))
+        self.inplanes = planes * block.expansion
+        for i in range(1, blocks):
+            layers.append(block(self.inplanes, planes))
+
+        return nn.Sequential(*layers)
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+        x = self.maxpool(x)
+
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        x = self.layer4(x)
+
+        z = self.decoder(x)
+
+        return z
+
+def fcn(pretrained=False, nparts=15):
+    model = ResNet(BasicBlock, [3, 4, 6, 3], nparts=nparts)
+
+    if pretrained:
+        model.load_state_dict(model_zoo.load_url(model_urls['resnet34']), strict=False)
+
+    return model
