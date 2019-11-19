@@ -57,7 +57,7 @@ class Pipline:
 
         img = img.transpose((2, 0, 1)).astype(np.float32)
 
-        targets = self.get_gussian_targets(
+        target = self.get_gussian_targets(
                     ann,
                     new_h,
                     new_w,
@@ -65,8 +65,15 @@ class Pipline:
                     self.cfg.SIGMA,
                     num_cls
                   )
+        
+        trans_info = {'do_flip': self.cfg.DO_FLIP,
+                      'img_shape': [h, w],
+                      'img_ratio': [r_h, r_w]}
 
-        return img, targets
+        return dict(imgs=img,
+                    targets=target,
+                    trans_infos=trans_info,
+                    anns=ann)
 
     def get_gussian_target(self, center, H, W, stride, sigma):
         """

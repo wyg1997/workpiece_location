@@ -85,8 +85,11 @@ class Trainer:
         print()
 
     def training_epoch(self):
-        for i, (ori_imgs, ori_targets) in enumerate(self.train_dataloader):
+        for i, data in enumerate(self.train_dataloader):
             start_time = time.time()
+            ori_imgs = data['imgs']
+            ori_targets = data['targets']
+
             imgs = Variable(ori_imgs).cuda()
             targets = Variable(ori_targets).cuda()
 
