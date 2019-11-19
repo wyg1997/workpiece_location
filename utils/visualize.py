@@ -17,7 +17,9 @@ _color_map = [
     'Magma',
 ]
 
-def visualize(imgs, targets=None, stride=1, mean=[0, 0, 0], std=[1, 1, 1], alpha=0.5):
+def visualize(imgs, targets=None, stride=1,
+              mean=[0, 0, 0], std=[1, 1, 1],
+              alpha=0.5, threshold=0.3):
     """
     Show image and target.
 
@@ -28,12 +30,15 @@ def visualize(imgs, targets=None, stride=1, mean=[0, 0, 0], std=[1, 1, 1], alpha
         mean: images mean.
         std: images std.
         alpha: heatmap weight.
+        threshold: Ignore pixel which score is too low.
 
     Output:
         show_imgs: The images will be showed with shape [n, c, h, w] with type `numpy`.
     """
     assert imgs.shape[-2] == targets.shape[-2]*stride and \
            imgs.shape[-1] == targets.shape[-1]*stride
+
+    targets[targets<threshold] = 0
 
     if stride != 1:
         targets = F.interpolate(targets, scale_factor=stride, mode='bicubic', align_corners=False)

@@ -136,7 +136,6 @@ class Trainer:
             # see train results
             if i == 0:
                 results = outputs.cpu().detach()
-                results[results<0.3] = 0
                 vis_images = visualize(ori_imgs, results,
                                        stride=self.cfg.TRAIN.STRIDE,
                                        mean=self.cfg.TRAIN.MEAN,
