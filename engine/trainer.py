@@ -1,16 +1,12 @@
 #!/usr/bin/env python
 # coding=utf-8
 
-import os
-import sys
 import os.path as osp
 import time
 
 import numpy as np
 import torch
-import torch.nn.functional as F
 from torch import nn
-import torch.optim as optim
 from torch.autograd import Variable
 
 from datasets.build import get_dataloader
@@ -23,9 +19,10 @@ from solver.build import make_optimizer, make_lr_scheduler
 class Trainer:
     def __init__(self, cfg, logger, vis, work_dir):
         self.cfg, self.logger, self.vis, self.work_dir = cfg, logger, vis, work_dir
-        
+
         # dataloader
-        self.train_dataloader, self.val_dataloader, self.classes = get_dataloader(cfg)
+        self.train_dataloader, self.val_dataloader, self.classes = \
+                get_dataloader(cfg)
         self.num_cls = len(self.classes) + 1
         self.logger.info(f"classes: {self.classes}")
 
@@ -120,12 +117,12 @@ class Trainer:
             self.vis.line(Y=np.array([loss]),
                           X=np.array([self.global_step]),
                           win='train_loss',
-                          update=None if self.global_step==1 else 'append')
+                          update=None if self.global_step == 1 else 'append')
             # lr line
             self.vis.line(Y=np.array([current_lr]),
                           X=np.array([self.global_step]),
                           win='lr',
-                          update=None if self.global_step==1 else 'append')
+                          update=None if self.global_step == 1 else 'append')
 
             # see train data
             if i == 0:
@@ -147,7 +144,6 @@ class Trainer:
                 self.vis.images(vis_images, win='train_results',
                                 opts=dict(title='train_results'))
 
-
     def train(self):
         self.on_train_begin()
 
@@ -157,7 +153,7 @@ class Trainer:
             self.training_epoch()
 
             self.on_epoch_end()
-            
+
             if (epoch+1) % self.cfg.SOLVER.CHECKPOINT == 0:
                 self.save_checkpoints()
 
@@ -166,4 +162,3 @@ class Trainer:
     def save_checkpoints(self):
         torch.save(self.model.state_dict(),
                    osp.join(self.work_dir, str(self.current_epoch))+'.pth')
-
