@@ -7,6 +7,8 @@ from visdom import Visdom
 import numpy as np
 import cv2
 
+from utils.cprint import cprint
+
 
 _color_map = [
     'Viridis',
@@ -22,7 +24,7 @@ def visualize(imgs, targets=None, stride=1, mean=[0, 0, 0], std=[1, 1, 1], alpha
     Input:
         imgs: torch image with shape [n, c, h, w].
         targets: heatmaps with images with shape [n, k, h, w],
-            k is the number of classes include background.
+            k is the number of classes including background.
         mean: images mean.
         std: images std.
         alpha: heatmap weight.
@@ -33,7 +35,8 @@ def visualize(imgs, targets=None, stride=1, mean=[0, 0, 0], std=[1, 1, 1], alpha
     assert imgs.shape[-2] == targets.shape[-2]*stride and \
            imgs.shape[-1] == targets.shape[-1]*stride
 
-    targets = F.interpolate(targets, scale_factor=stride, mode='bicubic', align_corners=False)
+    if stride != 1:
+        targets = F.interpolate(targets, scale_factor=stride, mode='bicubic', align_corners=False)
     
     # tensor to numpy
     imgs = imgs.numpy()
