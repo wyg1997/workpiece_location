@@ -18,4 +18,4 @@ class AverageMeter:
         self.val = val
         self.sum += val*n
         self.count += n
-        self.avg = self.sum / self.count
+        self.avg = self.sum / self.count if self.count != 0 else 0

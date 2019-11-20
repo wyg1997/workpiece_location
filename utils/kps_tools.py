@@ -1,11 +1,77 @@
 #!/usr/bin/env python
 # coding=utf-8
 
+import math
+
 import torch
 import torch.nn.functional as F
 import numpy as np
 
-from cprint import cprint
+from .cprint import cprint
+from .meters import AverageMeter
+
+
+def eval_key_points(kps, anns, size=40):
+    """
+    Compare detection results with groundtruth.
+
+    Inputs:
+        kps -> list with shape [n, k-1, m, 3]
+            All keypoints in heatmap with [x, y, score].
+        anns -> dict('locations': <tensor> (n, m, 2),
+                     'labels': <tensor> (n, m),
+                     ...)
+            Groundtruth keypoints(more informations see datasets/image_dataset.py).
+
+    Outputs:
+        avg_offset -> Float
+            Average distance with groundtruth.
+        precision -> Float
+            Precisions with results.
+        recall -> Float
+            Recall with results.
+    """
+    locations = anns['locations']
+    labels = anns['labels']
+    assert len(kps) == locations.shape[0]
+    cprint(kps, level='debug')
+    cprint(locations, level='debug')
+
+    avg_offset = AverageMeter()
+    precision = AverageMeter()
+    recall = AverageMeter()
+
+    n_batch = len(kps)
+    n_cls = len(kps[0])
+
+    # for i -> batch, j -> class, i_d -> detection, i_t -> groundtruth
+    for i in range(n_batch):
+        for j in range(n_cls):
+            dets = kps[i][j]
+            tars = locations[i, labels[i] == j+1]
+
+            n_dets = len(dets)
+            n_tars = tars.shape[0]
+
+            ok = 0
+            for i_d in range(n_dets):
+                for i_t in range(n_tars):
+                    if is_in_range(dets[i_d], tars[i_t], size):
+                        ok += 1
+                        dis = math.sqrt(
+                            calc_distance_square(dets[i_d], tars[i_t]))
+                        avg_offset.update(dis)
+                        break
+            precision.update(1, ok)
+            precision.update(0, n_dets-ok)
+            recall.update(1, ok)
+            recall.update(0, n_tars-ok)
+
+    return avg_offset.avg, precision.avg, recall.avg
+
+
+def is_in_range(p1, p2, size):
+    return calc_distance_square(p1, p2) < size * size
 
 
 def calc_distance_square(p1, p2):
@@ -16,8 +82,6 @@ def nms_points(x, y, score, size=40):
     """
     Select key points by nms.
     """
-    def _is_in_range(p1, p2, size):
-        return calc_distance_square(p1, p2) < size * size
 
     points = []
 
@@ -29,7 +93,7 @@ def nms_points(x, y, score, size=40):
         flag = True
         if points:
             for p2 in points:
-                if _is_in_range(p, p2, size):
+                if is_in_range(p, p2, size):
                     flag = False
                     break
         if flag:
@@ -71,8 +135,9 @@ def get_kps_from_heatmap(heatmap, stride, threshold=0.5, size=40):
     for i in range(batch):
         kps = []
         for j in range(1, num_cls + 1):
-            xx, yy = np.where(heatmap[i, j] > threshold)
-            score = heatmap[i, j, xx, yy]
+            # attention: heatmap[n, cls, h, w] -> [y, x]
+            yy, xx = np.where(heatmap[i, j] > threshold)
+            score = heatmap[i, j, yy, xx]
 
             # get key points by nms
             res = nms_points(xx, yy, score, size)

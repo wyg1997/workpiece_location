@@ -118,7 +118,7 @@ class ImageDataset:
             directions.append(direction)
 
         if not locations:
-            locations = np.zeros((0, 4))
+            locations = np.zeros((0, 2))
             labels = np.zeros((0, ))
             sizes = np.zeros((0, ))
             directions = np.zeros((0, ))

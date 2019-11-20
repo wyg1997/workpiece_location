@@ -14,6 +14,7 @@ from utils.meters import AverageMeter
 from utils.cprint import cprint
 from utils.visualize import visualize
 from solver.build import make_optimizer, make_lr_scheduler
+from utils.kps_tools import get_kps_from_heatmap, eval_key_points
 
 
 class Trainer:
@@ -101,18 +102,33 @@ class Trainer:
             # cost time
             cost_time = time.time() - start_time
 
+            # precisions of results
+            results = outputs.cpu().detach()
+            kps = get_kps_from_heatmap(results,
+                                       self.cfg.TRAIN.STRIDE,
+                                       threshold=0.5,
+                                       size=40)
+            dis, p, r = eval_key_points(kps, data['anns'], size=40)
+
+
             loss = loss.item()
             current_lr = self.optimizer.param_groups[0]['lr']
+
             # write log
             if i % self.cfg.SOLVER.LOG_INTERVAL == 0:
                 self.logger.info(f"Epoch: {self.current_epoch} | "
                                  f"Iter: {i+1}/{len(self.train_dataloader)} | "
                                  f"lr: {current_lr:.2e} | "
                                  f"loss: {loss:.4f} | "
+                                 f"dis_loss: {dis:.2f} | "
+                                 f"precision: {p:.2%} | "
+                                 f"recall: {r:.2%} | "
                                  f"time: {cost_time*1000:.0f}ms")
 
+            # update iter
             self.running_loss.update(loss)
             self.global_step += 1
+
             # loss line
             self.vis.line(Y=np.array([loss]),
                           X=np.array([self.global_step]),
@@ -122,6 +138,12 @@ class Trainer:
             self.vis.line(Y=np.array([current_lr]),
                           X=np.array([self.global_step]),
                           win='lr',
+                          update=None if self.global_step == 1 else 'append')
+
+            # dis line
+            self.vis.line(Y=np.array([dis]),
+                          X=np.array([self.global_step]),
+                          win='dis_loss',
                           update=None if self.global_step == 1 else 'append')
 
             # see train data
@@ -135,7 +157,6 @@ class Trainer:
 
             # see train results
             if i == 0:
-                results = outputs.cpu().detach()
                 vis_images = visualize(ori_imgs, results,
                                        stride=self.cfg.TRAIN.STRIDE,
                                        mean=self.cfg.TRAIN.MEAN,
