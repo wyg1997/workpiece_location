@@ -10,7 +10,7 @@ TRAIN:
     STD: [0.251, 0.251, 0.251]
     IMG_TYPE: 'png'
     STRIDE: 4
-    SIGMA: 3
+    SIGMA: 5
 
 
 TEST:
