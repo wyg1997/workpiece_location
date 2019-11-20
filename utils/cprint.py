@@ -44,9 +44,6 @@ class CPrint:
     +------+----------+
     '''
 
-    # control whether print colorful
-    print_color = True
-
     _base_string = '\033[{}m{}\033[0m'
     _COLOR2NUM = {
         'black':  [30, 40],
