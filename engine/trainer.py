@@ -129,6 +129,10 @@ class Trainer:
             self.running_loss.update(loss)
             self.global_step += 1
 
+            # show results and labels
+            self.vis.text(f"{kps}", win='results')
+            self.vis.text(f"{data['anns']}", win='anns')
+
             # loss line
             self.vis.line(Y=np.array([loss]),
                           X=np.array([self.global_step]),

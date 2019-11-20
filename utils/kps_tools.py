@@ -34,8 +34,6 @@ def eval_key_points(kps, anns, size=40):
     locations = anns['locations']
     labels = anns['labels']
     assert len(kps) == locations.shape[0]
-    cprint(kps, level='debug')
-    cprint(locations, level='debug')
 
     avg_offset = AverageMeter()
     precision = AverageMeter()
