@@ -13,7 +13,7 @@ from datasets.build import get_dataloader
 from utils.meters import AverageMeter
 from utils.cprint import cprint
 from utils.visualize import visualize
-from solver.build import make_optimizer, make_lr_scheduler
+from solver.build import make_optimizer, make_lr_scheduler, make_loss_function
 from utils.kps_tools import get_kps_from_heatmap, eval_key_points
 
 
@@ -42,7 +42,7 @@ class Trainer:
         # self.logger.info(f"model: \n{self.model}")
 
         # criterion
-        self.criterion = nn.MSELoss()
+        self.criterion = make_loss_function(self.cfg.SOLVER.LOSS)
 
         # optimizer
         self.optimizer = make_optimizer(cfg.SOLVER, self.model)

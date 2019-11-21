@@ -102,6 +102,8 @@ _C.DATALOADER.WORKERS = 8
 
 _C.SOLVER = CN()
 _C.SOLVER.EPOCHS = 30
+# loss function
+_C.SOLVER.LOSS = 'MSELoss'
 # choice optimizer
 _C.SOLVER.OPT = 'adam'
 _C.SOLVER.BASE_LR = 0.001
