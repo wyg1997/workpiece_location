@@ -88,14 +88,16 @@ class Trainer:
             ori_imgs = data['imgs']
             ori_targets = data['targets']
 
-            imgs = Variable(ori_imgs).cuda()
-            targets = Variable(ori_targets).cuda()
+            imgs = ori_imgs.cuda()
+            targets = ori_targets.cuda()
 
             self.optimizer.zero_grad()
             outputs = self.model(imgs)
 
+            # get loss
             loss = self.criterion(outputs, targets)
 
+            # backward step
             loss.backward()
             self.optimizer.step()
 
