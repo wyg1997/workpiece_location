@@ -18,6 +18,7 @@ _C = CN()
 _C.MODEL = CN()
 _C.MODEL.NAME = 'baseline'
 _C.MODEL.VERSION = 'v0'
+_C.MODEL.DESCRIPTION = '*** Please type in model description ***'
 # backbone
 # TODO: support other backbone
 _C.MODEL.BACKBONE = 'resnet50'

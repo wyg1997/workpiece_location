@@ -56,6 +56,11 @@ def main():
         os.makedirs(work_dir)
     logger = setup_logger('train', work_dir)
 
+    # print model description
+    print()
+    cprint(f"model description: {cfg.MODEL.DESCRIPTION}", kind=1)
+    print()
+
     logger.info(f"Use {num_gpus} gpus")
     logger.info(args)
     logger.info(f"Running with config:\n\n{cfg}\n")
