@@ -4,17 +4,15 @@
 import os.path as osp
 import time
 
-import numpy as np
 import torch
-from torch import nn
-from torch.autograd import Variable
+import numpy as np
 
 from datasets.build import get_dataloader
 from utils.meters import AverageMeter
 from utils.cprint import cprint
-from utils.visualize import visualize
 from solver.build import make_optimizer, make_lr_scheduler, make_loss_function
-from utils.kps_tools import get_kps_from_heatmap, eval_key_points
+from tools.visualize import visualize
+from tools.kps_tools import get_kps_from_heatmap, eval_key_points
 
 
 class Trainer:
@@ -23,7 +21,7 @@ class Trainer:
 
         # dataloader
         self.train_dataloader, self.val_dataloader, self.classes = \
-                get_dataloader(cfg)
+            get_dataloader(cfg)
         self.num_cls = len(self.classes) + 1
         self.logger.info(f"classes: {self.classes}")
 
@@ -111,7 +109,6 @@ class Trainer:
                                        threshold=0.5,
                                        size=40)
             dis, p, r = eval_key_points(kps, data['anns'], size=40)
-
 
             loss = loss.item()
             current_lr = self.optimizer.param_groups[0]['lr']

@@ -7,8 +7,8 @@ import torch
 import torch.nn.functional as F
 import numpy as np
 
-from .cprint import cprint
-from .meters import AverageMeter
+from utils.cprint import cprint
+from utils.meters import AverageMeter
 
 
 def eval_key_points(kps, anns, size=40):
