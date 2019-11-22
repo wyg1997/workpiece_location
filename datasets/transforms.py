@@ -16,12 +16,13 @@ def build_transforms(cfg, is_train):
     else:
         config = cfg.TEST
 
-    return Pipline(config, is_train)
+    return Pipline(config, cfg.MODEL.STRIDE, is_train)
 
 
 class Pipline:
-    def __init__(self, cfg, is_train):
+    def __init__(self, cfg, stride, is_train):
         self.cfg = cfg
+        self.stride = stride
         self.is_train = is_train
 
     def __call__(self, results, num_cls):
@@ -61,10 +62,10 @@ class Pipline:
                     ann,
                     new_h,
                     new_w,
-                    self.cfg.STRIDE,
+                    self.stride,
                     self.cfg.SIGMA,
                     num_cls
-                  )
+                  ) if self.is_train else []
         
         trans_info = {'do_flip': self.cfg.DO_FLIP,
                       'img_shape': [h, w],

@@ -1,6 +1,9 @@
 MODEL:
     NAME: 'baseline'
     VERSION: 'v0'
+    DESCRIPTION: 'Resnet34 model with MSELoss'
+    CLASSES: []
+    STRIDE: 4
 
 
 TRAIN:
@@ -9,7 +12,6 @@ TRAIN:
     MEAN: [0.152, 0.152, 0.152]
     STD: [0.251, 0.251, 0.251]
     IMG_TYPE: 'png'
-    STRIDE: 4
     SIGMA: 5
 
 
@@ -22,8 +24,12 @@ TEST:
 
 
 DATALOADER:
-    BATCH_SIZE: 4
-    WORKERS: 0
+    TRAIN:
+        BATCH_SIZE: 4
+        WORKERS: 8
+    TEST:
+        BATCH_SIZE: 8
+        WORKERS: 0
 
 
 SOLVER:
@@ -45,6 +51,8 @@ SOLVER:
     WARMUP_METHOD: 'linear'
     # log
     LOG_INTERVAL: 1
+    # eval
+    EVAL_EPOCH: 1
     # save model
     CHECKPOINT: 10
 

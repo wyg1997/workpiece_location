@@ -43,7 +43,8 @@ class ImageDataset:
     def __init__(self,
                  cfg,
                  pipeline,
-                 test_mode=False):
+                 test_mode=False,
+                 CLASSES=None):
 
         self.img_type = cfg.IMG_TYPE
         assert self.img_type in self.all_img_type, f"img_type must be one of {self.all_img_type}"
@@ -51,6 +52,12 @@ class ImageDataset:
         self.data_root = osp.abspath(cfg.DATA_ROOT)
         self.img_index = cfg.IMG_INDEX
         self.test_mode = test_mode
+
+        # classes
+        if CLASSES is not None:
+            self.CLASSES = CLASSES
+            for i, cls in enumerate(CLASSES):
+                self.cat2label[cls] = i+1
 
         # load annotations (and proposals)
         self.img_infos = self.load_annotations(self.data_root)

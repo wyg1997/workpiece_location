@@ -13,6 +13,7 @@ from utils.cprint import cprint
 from solver.build import make_optimizer, make_lr_scheduler, make_loss_function
 from tools.visualize import visualize
 from tools.kps_tools import get_kps_from_heatmap, eval_key_points
+from .tester import Tester
 
 
 class Trainer:
@@ -20,8 +21,8 @@ class Trainer:
         self.cfg, self.logger, self.vis, self.work_dir = cfg, logger, vis, work_dir
 
         # dataloader
-        self.train_dataloader, self.val_dataloader, self.classes = \
-            get_dataloader(cfg)
+        self.train_dataloader, self.classes = \
+            get_dataloader(cfg, kind='train', CLASSES=cfg.MODEL.CLASSES)
         self.num_cls = len(self.classes) + 1
         self.logger.info(f"classes: {self.classes}")
 
@@ -38,6 +39,9 @@ class Trainer:
         #                 resnet_layers=50)
 
         # self.logger.info(f"model: \n{self.model}")
+
+        # Tester
+        self.tester = Tester(cfg, logger, vis, work_dir, self.model, self.classes)
 
         # criterion
         self.criterion = make_loss_function(self.cfg.SOLVER.LOSS)
@@ -78,6 +82,9 @@ class Trainer:
         self.logger.info(f"Epoch: {self.current_epoch} | "
                          f"time: {mins:d}min:{seconds:d}s | "
                          f"loss: {self.running_loss.avg:.5f}")
+        # test
+        if self.current_epoch % self.cfg.SOLVER.EVAL_EPOCH == 0:
+            self.tester.test()
         print()
 
     def training_epoch(self):
@@ -105,7 +112,7 @@ class Trainer:
             # precisions of results
             results = outputs.cpu().detach()
             kps = get_kps_from_heatmap(results,
-                                       self.cfg.TRAIN.STRIDE,
+                                       self.cfg.MODEL.STRIDE,
                                        threshold=0.5,
                                        size=40)
             dis, p, r = eval_key_points(kps, data['anns'], size=40)
@@ -136,23 +143,26 @@ class Trainer:
             self.vis.line(Y=np.array([loss]),
                           X=np.array([self.global_step]),
                           win='train_loss',
-                          update=None if self.global_step == 1 else 'append')
+                          update=None if self.global_step == 1 else 'append',
+                          opts=dict(title='train_loss'))
             # lr line
             self.vis.line(Y=np.array([current_lr]),
                           X=np.array([self.global_step]),
                           win='lr',
-                          update=None if self.global_step == 1 else 'append')
+                          update=None if self.global_step == 1 else 'append',
+                          opts=dict(title='train_lr'))
 
             # dis line
             self.vis.line(Y=np.array([dis]),
                           X=np.array([self.global_step]),
                           win='dis_loss',
-                          update=None if self.global_step == 1 else 'append')
+                          update=None if self.global_step == 1 else 'append',
+                          opts=dict(title='train_dis_loss'))
 
             # see train data
             if i == 0:
                 vis_images = visualize(ori_imgs, ori_targets,
-                                       stride=self.cfg.TRAIN.STRIDE,
+                                       stride=self.cfg.MODEL.STRIDE,
                                        mean=self.cfg.TRAIN.MEAN,
                                        std=self.cfg.TRAIN.STD)
                 self.vis.images(vis_images, win='label',
@@ -161,7 +171,7 @@ class Trainer:
             # see train results
             if i == 0:
                 vis_images = visualize(ori_imgs, results,
-                                       stride=self.cfg.TRAIN.STRIDE,
+                                       stride=self.cfg.MODEL.STRIDE,
                                        mean=self.cfg.TRAIN.MEAN,
                                        std=self.cfg.TRAIN.STD,
                                        alpha=0.7)

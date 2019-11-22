@@ -32,6 +32,10 @@ _C.MODEL.CHECKPOINT = ''
 # TODO: support detect size and direction
 _C.MODEL.size = False
 _C.MODEL.DIRECTION = False
+# classes
+_C.MODEL.CLASSES = []
+# model stride
+_C.MODEL.STRIDE = 1
 
 
 ################
@@ -58,7 +62,6 @@ _C.TRAIN.DO_LIGHTNING = False
 _C.TRAIN.MAX_LIGHTNING = 0.2
 _C.TRAIN.P_LIGHTNING = 0.75
 # heatmap parameters
-_C.TRAIN.STRIDE = 1
 _C.TRAIN.SIGMA = 5
 
 
@@ -92,9 +95,14 @@ _C.TEST.P_LIGHTNING = 0.75
 ##############
 
 _C.DATALOADER = CN()
-# TODO: more batch-size
-_C.DATALOADER.BATCH_SIZE = 1
-_C.DATALOADER.WORKERS = 8
+
+_C.DATALOADER.TRAIN = CN()
+_C.DATALOADER.TRAIN.BATCH_SIZE = 1
+_C.DATALOADER.TRAIN.WORKERS = 0
+
+_C.DATALOADER.TEST = CN()
+_C.DATALOADER.TEST.BATCH_SIZE = 1
+_C.DATALOADER.TEST.WORKERS = 0
 
 
 ##########
@@ -120,8 +128,7 @@ _C.SOLVER.WARMUP_METHOD = 'linear'
 # log
 _C.SOLVER.LOG_INTERVAL = 10
 # eval
-# TODO: support eval
-_C.SOLVER.EVAL_EPOCH = 20
+_C.SOLVER.EVAL_EPOCH = 5
 # save model
 _C.SOLVER.CHECKPOINT = 10
 

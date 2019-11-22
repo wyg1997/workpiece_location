@@ -8,26 +8,35 @@ from .image_dataset import ImageDataset
 from utils.cprint import cprint
 
 
-def get_dataloader(cfg):
-    cprint('preparing dataset...')
-    train_trans = build_transforms(cfg, is_train=True)
-    test_trans = build_transforms(cfg, is_train=False)
+_ALL_KIND = ['train', 'test']
 
-    cprint('loading train dataset...')
-    train_imgs = ImageDataset(cfg.TRAIN, train_trans, test_mode=False)
-    train_dataloader = DataLoader(train_imgs,
-                                  cfg.DATALOADER.BATCH_SIZE,
-                                  shuffle=True,
-                                  num_workers=cfg.DATALOADER.WORKERS,
-                                  pin_memory=True
-                                 )
+def get_dataloader(cfg, kind, CLASSES=[]):
+    if len(CLASSES) == 0:
+        CLASSES = None
 
-    cprint('loading test dataset...')
-    test_imgs = ImageDataset(cfg.TEST, test_trans, test_mode=True)
-    test_dataloader = DataLoader(test_imgs,
-                                 batch_size=1,
-                                 shuffle=False,
-                                 num_workers=0,
-                                )
+    if kind == 'train':
+        cprint('train dataloader:')
+        train_trans = build_transforms(cfg, is_train=True)
+        train_imgs = ImageDataset(cfg.TRAIN, train_trans, test_mode=False, CLASSES=CLASSES)
+        train_dataloader = DataLoader(train_imgs,
+                                      cfg.DATALOADER.TRAIN.BATCH_SIZE,
+                                      shuffle=True,
+                                      num_workers=cfg.DATALOADER.TRAIN.WORKERS,
+                                      pin_memory=True
+                                     )
+        return train_dataloader, train_imgs.CLASSES
+    elif kind == 'test':
+        assert CLASSES is not None, "test dataloader `CLASSES` must not be None."
+        cprint('test dataloader:')
+        test_trans = build_transforms(cfg, is_train=False)
+        test_imgs = ImageDataset(cfg.TEST, test_trans, test_mode=True, CLASSES=CLASSES)
+        test_dataloader = DataLoader(test_imgs,
+                                     cfg.DATALOADER.TEST.BATCH_SIZE,
+                                     shuffle=False,
+                                     num_workers=cfg.DATALOADER.TEST.WORKERS,
+                                    )
+        return test_dataloader
+    else:
+        cprint(f"dataloader kind must be one of {_ALL_KIND}")
+        raise NameError(f"not support dataloader kind {kind}")
 
-    return train_dataloader, test_dataloader, train_imgs.CLASSES
