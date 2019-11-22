@@ -16,5 +16,6 @@
 ### Usage
 
 ```sh
+python -m visdom.server -port 8887
 CUDA_VISIBLE_DEVICE=1 python tools/train.py --config_file configs/resnet34.yml VISDOM.PORT 8887
 ```
