@@ -15,7 +15,20 @@
 
 ### Usage
 
+#### keypoints marking
+
+```sh
+python tools/kps_marking_tool.py \
+    --classes [cls1] [cls2] [cls3] ... \
+    --path [data_root_path] \
+    --img_type ['png', 'jpg', 'bmp'] \
+    --idx 1
+```
+
+#### Train and Val
+
 ```sh
 python -m visdom.server -port 8887
 CUDA_VISIBLE_DEVICE=1 python tools/train.py --config_file configs/resnet34.yml VISDOM.PORT 8887
 ```
+
