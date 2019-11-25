@@ -15,7 +15,7 @@ def get_dataloader(cfg, kind, CLASSES=[]):
         CLASSES = None
 
     if kind == 'train':
-        cprint('train dataloader:')
+        cprint('loading train dataloader...')
         train_trans = build_transforms(cfg, is_train=True)
         train_imgs = ImageDataset(cfg.TRAIN, train_trans, test_mode=False, CLASSES=CLASSES)
         train_dataloader = DataLoader(train_imgs,
@@ -27,7 +27,7 @@ def get_dataloader(cfg, kind, CLASSES=[]):
         return train_dataloader, train_imgs.CLASSES
     elif kind == 'test':
         assert CLASSES is not None, "test dataloader `CLASSES` must not be None."
-        cprint('test dataloader:')
+        cprint('loading test dataloader...')
         test_trans = build_transforms(cfg, is_train=False)
         test_imgs = ImageDataset(cfg.TEST, test_trans, test_mode=True, CLASSES=CLASSES)
         test_dataloader = DataLoader(test_imgs,

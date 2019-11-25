@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # coding=utf-8
 
-
 import os
 import os.path as osp
 import xml.etree.ElementTree as ET
+from copy import deepcopy
 
 import numpy as np
 from utils.cprint import cprint
@@ -188,6 +188,6 @@ class ImageDataset:
 
     def prepare_img(self, idx):
         img_info = self.img_infos[idx]
-        results = dict(img_info=img_info)
+        results = dict(img_info=deepcopy(img_info))
         self.pre_pipeline(results)
         return self.pipeline(results, len(self.CLASSES)+1)

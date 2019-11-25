@@ -54,7 +54,7 @@ _C.TRAIN.SIZE = [512, 512]
 # TODO: do flip
 _C.TRAIN.DO_FLIP = False
 _C.TRAIN.PROB = 0.5
-# do image normalization
+# do image normalization [r, b, g]
 _C.TRAIN.MEAN = [0.485, 0.456, 0.406]
 _C.TRAIN.STD = [0.229, 0.224, 0.225]
 # random lightning and contrast
