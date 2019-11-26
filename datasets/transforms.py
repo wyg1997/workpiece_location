@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # coding=utf-8
 
+import random
+
 import torchvision.transforms as T
 import cv2
 import torch
@@ -31,6 +33,8 @@ class Pipline:
         self.pipline.append(Resize(self.cfg.SIZE,
                                    pad_color=self.cfg.MEAN,
                                    keep_ratio=True))
+        if self.cfg.DO_FLIP:
+            self.pipline.append(Flip(self.cfg.FLIP_PROB))
         
 
     def __call__(self, results, num_cls):
@@ -68,7 +72,7 @@ class Pipline:
                     self.cfg.SIGMA,
                     num_cls
                   ) if self.is_train else []
-        
+
         return dict(imgs=img,
                     targets=target,
                     trans_infos=trans_info,
@@ -213,3 +217,42 @@ class Resize:
 
         return ann
 
+
+class Flip:
+    """
+    Flip images and annotations(including location and direction).
+
+    Param:
+        prob: The probability 
+
+    Input:
+        sample: A dict including target which will be processed.
+
+    Output:
+        sample: Result dict.
+    """
+    def __init__(self, prob):
+        self.prob = prob
+
+    def __call__(self, sample, trans_info):
+        # TODO: support flip top-bottom
+        img = sample['img']
+        ann = sample['ann']
+
+        if random.random() < self.prob:
+            img = self._flip_img(img)
+            ann = self._flip_ann(ann, img.shape[:2])
+            trans_info['flip'] = True
+        else:
+            trans_info['flip'] = False
+
+        return dict(img=img, ann=ann)
+
+    def _flip_img(self, img):
+        return img[:, ::-1, :]
+
+    def _flip_ann(self, ann, size):
+        _, w = size
+        ann['locations'][:, 0] = -ann['locations'][:, 0] + w
+        # TODO: support flip directions
+        return ann

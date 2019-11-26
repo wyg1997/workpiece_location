@@ -1,5 +1,5 @@
 MODEL:
-    NAME: 'baseline'
+    NAME: 'type-c'
     VERSION: 'v0'
     DESCRIPTION: 'Resnet34 model with MSELoss'
     CLASSES: []
@@ -13,10 +13,12 @@ TRAIN:
     STD: [0.251, 0.251, 0.251]
     IMG_TYPE: 'png'
     SIGMA: 5
+    DO_FLIP: True
+    FLIP_PROB: 0.5
 
 
 TEST:
-    DATA_ROOT: 'data/type-c/train'
+    DATA_ROOT: 'data/type-c/test'
     SIZE: [256, 320]
     MEAN: [0.152, 0.152, 0.152]
     STD: [0.251, 0.251, 0.251]
@@ -29,7 +31,7 @@ DATALOADER:
         WORKERS: 8
     TEST:
         BATCH_SIZE: 8
-        WORKERS: 0
+        WORKERS: 8
 
 
 SOLVER:
