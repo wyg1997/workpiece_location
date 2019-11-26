@@ -35,6 +35,8 @@ class Pipline:
                                    keep_ratio=True))
         if self.cfg.DO_FLIP:
             self.pipline.append(Flip(self.cfg.FLIP_PROB))
+        if self.cfg.DO_SCALE:
+            self.pipline.append(Scale(self.cfg.SCALE_RANGE, self.cfg.MEAN))
         
 
     def __call__(self, results, num_cls):
@@ -65,11 +67,13 @@ class Pipline:
 
         img = img.transpose((2, 0, 1)).astype(np.float32)
 
+        scale_factor = 1 if 'scale_factor' not in trans_info \
+                         else trans_info['scale_factor']
         target = self.get_gussian_targets(
                     ann,
                     img_size,
                     self.stride,
-                    self.cfg.SIGMA,
+                    self.cfg.SIGMA * scale_factor,
                     num_cls
                   ) if self.is_train else []
 
@@ -114,7 +118,7 @@ class Pipline:
         """
         H, W = size
         if H % stride != 0 or W % stride != 0:
-            cprint(f"image size({size}) is illegal", level='error')
+            cprint(f"image size{size} is illegal", level='error')
             raise ValueError(f"image size is illegal")
 
         heatmaps = np.zeros((num_cls, H//stride, W//stride)).astype(np.float32)
@@ -256,3 +260,81 @@ class Flip:
         ann['locations'][:, 0] = -ann['locations'][:, 0] + w
         # TODO: support flip directions
         return ann
+
+
+class Scale:
+    """
+    Scale images and annotations(including location and size)
+    It 
+
+    Param:
+        range: The scale range with list [start, end].
+               `start` and `end` both less equal than 1.
+        img_mean: Be used to fill empty pixels.
+
+    Input:
+        sample: A dict including target which will be processed.
+
+    Output:
+        sample: Result dict.
+    """
+    def __init__(self, scale_range, pad_color=[0, 0, 0]):
+        if not isinstance(scale_range, list):
+            cprint(f"scale_range is must be list, but get {type(scale_range)}",
+                   level='error')
+            raise TypeError(f"scale_range type error")
+        elif len(scale_range) != 2:
+            cprint(f"The length of scale_range is must be 2, but get {len(scale_range)}",
+                   level='error')
+            raise ValueError(f"scale_range value error")
+        elif not all(0.1 <= x <= 1.0 for x in scale_range):
+            cprint(f"scale_range must be in range [0.1, 1.0], but get {scale_range}",
+                   level='error')
+            raise ValueError(f"scale_range value error")
+
+        self.scale_range = scale_range
+        self.pad_color = [int(x*255) for x in pad_color]
+
+    def __call__(self, sample, trans_info):
+        img = sample['img']
+        ann = sample['ann']
+
+        scale_factor = random.uniform(*self.scale_range)
+
+        img, shift = self._scale_img(img, scale_factor)
+        ann = self._scale_ann(ann, scale_factor, shift)
+
+        # save infos
+        trans_info['scale_factor'] = scale_factor
+        trans_info['scale_shift'] = shift
+
+        return dict(img=img, ann=ann)
+
+    def _scale_img(self, img, factor):
+        h, w = img.shape[:2]
+        new_h, new_w = int(h*factor), int(w*factor)
+
+        img = cv2.resize(img, (new_w, new_h))
+
+        top_pad = (h-new_h) // 2
+        left_pad = (w-new_w) // 2
+        bottom_pad = h - new_h - top_pad
+        right_pad = w - new_w - left_pad
+
+        img = cv2.copyMakeBorder(img, top_pad, bottom_pad, left_pad, right_pad,
+                                 cv2.BORDER_CONSTANT, None, self.pad_color)
+        return img, (left_pad, top_pad)
+
+    def _scale_ann(self, ann, factor, shift):
+        """
+        Input:
+            ann: Dict 
+            factor: Float
+            shift: List with [shift_x, shift_y] means shift right and down.
+        """
+        shift_x, shift_y = shift
+
+        ann['locations'] = ann['locations'].astype(np.float) * factor + [shift_x, shift_y]
+        ann['sizes'] = ann['sizes'].astype(np.float) * factor
+        return ann
+

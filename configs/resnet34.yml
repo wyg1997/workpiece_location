@@ -13,8 +13,10 @@ TRAIN:
     STD: [0.251, 0.251, 0.251]
     IMG_TYPE: 'png'
     SIGMA: 5
-    DO_FLIP: True
+    DO_FLIP: False
     FLIP_PROB: 0.5
+    DO_SCALE: True
+    SCALE_RANGE: [0.5, 1.0]
 
 
 TEST:
@@ -40,13 +42,12 @@ SOLVER:
     LOSS: 'MSELoss'
     # optimizer
     OPT: 'adam'
-    # BASE_LR: 0.0005
-    BASE_LR: 0.001
+    BASE_LR: 0.0005
     MOMENTUM: 0.9
     WEIGHT_DECAY: 0.0001
     # step
     GAMMA: 0.1
-    STEPS: [40, 60]
+    STEPS: [30, 60]
     # warm up
     WARMUP_FACTOR: 0.33
     WARMUP_ITERS: 6

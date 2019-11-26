@@ -51,9 +51,12 @@ _C.TRAIN.IMG_TYPE = 'png'
 _C.TRAIN.IMG_INDEX = []
 # size: [h, w]
 _C.TRAIN.SIZE = [512, 512]
-# TODO: do flip
+# do flip
 _C.TRAIN.DO_FLIP = False
 _C.TRAIN.FLIP_PROB = 0.5
+# do scale(small than origin)
+_C.TRAIN.DO_SCALE = False
+_C.TRAIN.SCALE_RANGE = [0.8, 1.0]
 # do image normalization [r, b, g]
 _C.TRAIN.MEAN = [0.485, 0.456, 0.406]
 _C.TRAIN.STD = [0.229, 0.224, 0.225]
@@ -78,9 +81,10 @@ _C.TEST.IMG_TYPE = 'png'
 _C.TEST.IMG_INDEX = []
 # size: [h, w]
 _C.TEST.SIZE = [512, 512]
-# TODO: do flip
+# do flip
 _C.TEST.DO_FLIP = False
-_C.TEST.PROB = 0.5
+# do scale
+_C.TEST.DO_SCALE = False
 # do image normalization
 _C.TEST.MEAN = [0.485, 0.456, 0.406]
 _C.TEST.STD = [0.229, 0.224, 0.225]
