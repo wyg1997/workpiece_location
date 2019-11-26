@@ -129,7 +129,7 @@ class Pipline:
 
 class Resize:
     """
-    Resize images and annotations(including location, size and direction).
+    Resize images and annotations(including location and size).
 
     Param:
         img_scale: The result images size in list [h, w].
@@ -146,7 +146,7 @@ class Resize:
                  pad_color=[0, 0, 0],
                  keep_ratio=True):
         self.img_scale = img_scale
-        # change range to 0-254
+        # change range to 0-255
         self.pad_color = [int(x*255) for x in pad_color]
         self.keep_ratio = keep_ratio
 
@@ -169,8 +169,8 @@ class Resize:
         new_h = int(img.shape[0] * r_h + 0.5)
         new_w = int(img.shape[1] * r_w + 0.5)
 
-        img = self.resize_img(img, (new_h, new_w), self.img_scale)
-        ann = self.resize_ann(ann, (r_h, r_w))
+        img = self._resize_img(img, (new_h, new_w), self.img_scale)
+        ann = self._resize_ann(ann, (r_h, r_w))
         return dict(img=img, ann=ann)
 
     def _get_ratio(self, ori_size, target_size):
@@ -192,7 +192,7 @@ class Resize:
         else:
             return r_h, r_w
 
-    def resize_img(self, img, resize_shape, pad_shape):
+    def _resize_img(self, img, resize_shape, pad_shape):
         # tips: cv2.resize recieve [w, h]
         img = cv2.resize(img, (resize_shape[1], resize_shape[0]))
 
@@ -204,7 +204,7 @@ class Resize:
 
         return img
 
-    def resize_ann(self, ann, ratio):
+    def _resize_ann(self, ann, ratio):
         r_h, r_w = ratio
 
         # resize labels
