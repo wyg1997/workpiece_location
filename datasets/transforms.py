@@ -38,6 +38,8 @@ class Pipline:
             self.pipline.append(Flip(self.cfg.FLIP_PROB))
         if self.cfg.DO_SCALE:
             self.pipline.append(Scale(self.cfg.SCALE_RANGE, self.cfg.MEAN))
+        if self.cfg.DO_ROTATE:
+            self.pipline.append(Rotate(self.cfg.ROTATE_RANGE, self.cfg.MEAN))
 
     def __call__(self, results, num_cls):
         # image info
@@ -267,10 +269,9 @@ class Flip:
 class Scale:
     """
     Scale images and annotations(including location and size)
-    It 
 
     Param:
-        range: The scale range with list [start, end].
+        scale_range: The scale range with list [start, end].
                `start` and `end` both less equal than 1.
         img_mean: Be used to fill empty pixels.
 
@@ -341,3 +342,70 @@ class Scale:
             ann['locations'].astype(np.float) * factor + [shift_x, shift_y]
         ann['sizes'] = ann['sizes'].astype(np.float) * factor
         return ann
+
+
+class Rotate:
+    """
+    Rotate images and annotations(including location and direction)
+
+    Param:
+        rotate_range: The rotate range with List [start, end].
+            `start` and `end` in range [-180, 180]
+    Input:
+        sample: A dict including target which will be processed.
+
+    Output:
+        sample: Result dict.
+    """
+
+    def __init__(self, rotate_range, pad_color=[0, 0, 0]):
+        if not isinstance(rotate_range, list):
+            cprint(f"rotate_range is must be list, but get {type(rotate_range)}",
+                   level='error')
+            raise TypeError(f"rotate_range type error")
+        elif len(rotate_range) != 2:
+            cprint(f"The length of rotate_range is must be 2, but get {len(rotate_range)}",
+                   level='error')
+            raise ValueError(f"rotate_range value error")
+        elif not all(-180 <= x <= 180 for x in rotate_range):
+            cprint(f"rotate_range must be in range [-180, 180], but get {rotate_range}",
+                   level='error')
+            raise ValueError(f"rotate_range value error")
+
+        self.rotate_range = rotate_range
+        self.pad_color = [int(x*255) for x in pad_color]
+
+    def __call__(self, sample, trans_info):
+        img = sample['img']
+        ann = sample['ann']
+
+        rotate_angle = random.randrange(*self.rotate_range)
+        trans_info['rotate_angle'] = rotate_angle
+
+        # M.shape: [2, 3]
+        M = self._get_affine_matrix(img.shape[:2], rotate_angle)
+
+        img = self._rotate_img(img, M)
+        ann = self._rotate_ann(ann, M)
+
+        return dict(img=img, ann=ann)
+
+    def _get_affine_matrix(self, size, rotate_angle):
+        h, w = size
+        center = (w/2, h/2)
+        M = cv2.getRotationMatrix2D(center, rotate_angle, scale=1.0)
+        return M
+        
+    def _rotate_img(self, img, M):
+        # warpAffine(src, M, dsize[, dst[, flags[, borderMode[, borderValue]]]])
+        # dsize is [w, h]
+        img = cv2.warpAffine(img, M, img.shape[:2][::-1],
+                             borderValue=self.pad_color)
+        return img
+
+    def _rotate_ann(self, ann, M):
+        ann['locations'] = np.insert(ann['locations'], 2, 1, axis=1).T # shape [3, n]
+        ann['locations'] = np.matmul(M, ann['locations']).T # [2, 3] * [3, n]
+        # TODO: rotate directions
+        return ann
+

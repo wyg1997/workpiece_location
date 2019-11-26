@@ -16,7 +16,9 @@ TRAIN:
     DO_FLIP: False
     FLIP_PROB: 0.5
     DO_SCALE: True
-    SCALE_RANGE: [0.5, 1.0]
+    SCALE_RANGE: [0.8, 1.0]
+    DO_ROTATE: False
+    ROTATE_RANGE: [-5.0, 5.0]
 
 
 TEST:

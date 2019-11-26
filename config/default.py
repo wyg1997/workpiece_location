@@ -57,6 +57,9 @@ _C.TRAIN.FLIP_PROB = 0.5
 # do scale(small than origin)
 _C.TRAIN.DO_SCALE = False
 _C.TRAIN.SCALE_RANGE = [0.8, 1.0]
+# do rotate
+_C.TRAIN.DO_ROTATE = False
+_C.TRAIN.ROTATE_RANGE = [-5.0, 5.0]
 # do image normalization [r, b, g]
 _C.TRAIN.MEAN = [0.485, 0.456, 0.406]
 _C.TRAIN.STD = [0.229, 0.224, 0.225]
@@ -85,6 +88,8 @@ _C.TEST.SIZE = [512, 512]
 _C.TEST.DO_FLIP = False
 # do scale
 _C.TEST.DO_SCALE = False
+# do rotate
+_C.TEST.DO_ROTATE = False
 # do image normalization
 _C.TEST.MEAN = [0.485, 0.456, 0.406]
 _C.TEST.STD = [0.229, 0.224, 0.225]
