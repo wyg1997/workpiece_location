@@ -23,6 +23,7 @@ class Pipline:
     """
     Process images and annotations before training or testing.
     """
+
     def __init__(self, cfg, stride, is_train):
         self.cfg = cfg
         self.stride = stride
@@ -37,7 +38,6 @@ class Pipline:
             self.pipline.append(Flip(self.cfg.FLIP_PROB))
         if self.cfg.DO_SCALE:
             self.pipline.append(Scale(self.cfg.SCALE_RANGE, self.cfg.MEAN))
-        
 
     def __call__(self, results, num_cls):
         # image info
@@ -68,14 +68,14 @@ class Pipline:
         img = img.transpose((2, 0, 1)).astype(np.float32)
 
         scale_factor = 1 if 'scale_factor' not in trans_info \
-                         else trans_info['scale_factor']
+            else trans_info['scale_factor']
         target = self.get_gussian_targets(
-                    ann,
-                    img_size,
-                    self.stride,
-                    self.cfg.SIGMA * scale_factor,
-                    num_cls
-                  ) if self.is_train else []
+            ann,
+            img_size,
+            self.stride,
+            self.cfg.SIGMA * scale_factor,
+            num_cls
+        ) if self.is_train else []
 
         return dict(imgs=img,
                     targets=target,
@@ -85,7 +85,7 @@ class Pipline:
     def get_gussian_target(self, center, size, stride, sigma):
         """
         根据一个中心点，生成高斯热力图。
-        
+
         Inputs:
             center: 一个中心点[x, y]
 
@@ -149,6 +149,7 @@ class Resize:
     Output:
         sample: Result dict.
     """
+
     def __init__(self,
                  img_scale,
                  pad_color=[0, 0, 0],
@@ -216,7 +217,7 @@ class Resize:
         r_h, r_w = ratio
 
         # resize labels
-        ann['locations'] = ann['locations'].astype(np.float) * [r_w, r_h];
+        ann['locations'] = ann['locations'].astype(np.float) * [r_w, r_h]
         ann['sizes'] = ann['sizes'].astype(np.float) * max(r_h, r_w)
 
         return ann
@@ -235,6 +236,7 @@ class Flip:
     Output:
         sample: Result dict.
     """
+
     def __init__(self, prob):
         self.prob = prob
 
@@ -278,6 +280,7 @@ class Scale:
     Output:
         sample: Result dict.
     """
+
     def __init__(self, scale_range, pad_color=[0, 0, 0]):
         if not isinstance(scale_range, list):
             cprint(f"scale_range is must be list, but get {type(scale_range)}",
@@ -334,7 +337,7 @@ class Scale:
         """
         shift_x, shift_y = shift
 
-        ann['locations'] = ann['locations'].astype(np.float) * factor + [shift_x, shift_y]
+        ann['locations'] = \
+            ann['locations'].astype(np.float) * factor + [shift_x, shift_y]
         ann['sizes'] = ann['sizes'].astype(np.float) * factor
         return ann
-
