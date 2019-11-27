@@ -60,6 +60,12 @@ _C.TRAIN.SCALE_RANGE = [0.8, 1.0]
 # do rotate
 _C.TRAIN.DO_ROTATE = False
 _C.TRAIN.ROTATE_RANGE = [-5.0, 5.0]
+# Albu
+_C.TRAIN.DO_ALBU = False
+_C.TRAIN.ALBU_BRIGHTNESS = 0.2
+_C.TRAIN.ALBU_CONTRAST = 0.5
+_C.TRAIN.ALBU_SATURATION = 0.5
+_C.TRAIN.ALBU_HUE = 0.0
 # do image normalization [r, b, g]
 _C.TRAIN.MEAN = [0.485, 0.456, 0.406]
 _C.TRAIN.STD = [0.229, 0.224, 0.225]
@@ -90,6 +96,8 @@ _C.TEST.DO_FLIP = False
 _C.TEST.DO_SCALE = False
 # do rotate
 _C.TEST.DO_ROTATE = False
+# do albu
+_C.TEST.DO_ALBU = False
 # do image normalization
 _C.TEST.MEAN = [0.485, 0.456, 0.406]
 _C.TEST.STD = [0.229, 0.224, 0.225]

@@ -4,6 +4,7 @@
 import random
 
 import torchvision.transforms as T
+from torchvision.transforms import ColorJitter, ToPILImage
 import cv2
 import torch
 import numpy as np
@@ -40,6 +41,11 @@ class Pipline:
             self.pipline.append(Scale(self.cfg.SCALE_RANGE, self.cfg.MEAN))
         if self.cfg.DO_ROTATE:
             self.pipline.append(Rotate(self.cfg.ROTATE_RANGE, self.cfg.MEAN))
+        if self.cfg.DO_ALBU:
+            self.pipline.append(Albu(self.cfg.ALBU_BRIGHTNESS,
+                                     self.cfg.ALBU_CONTRAST,
+                                     self.cfg.ALBU_SATURATION,
+                                     self.cfg.ALBU_HUE))
 
     def __call__(self, results, num_cls):
         # image info
@@ -409,3 +415,28 @@ class Rotate:
         # TODO: rotate directions
         return ann
 
+
+class Albu:
+    """
+    Transform Image with color including brightness, contrast, saturation and hue.
+
+    Input:
+        sample: A dict including target which will be processed.
+
+    Output:
+        sample: Result dict.
+    """
+    def __init__(self, brightness=0, contrast=0, saturation=0, hue=0):
+        self.to_tensor = ToPILImage()
+        self.albu = ColorJitter(brightness=brightness,
+                                contrast=contrast,
+                                saturation=saturation,
+                                hue=hue)
+
+    def __call__(self, sample, tran_info):
+        img = sample['img']
+        ann = sample['ann']
+
+        img = self.albu(self.to_tensor(img))
+        img = np.asarray(img)
+        return dict(img=img, ann=ann)
