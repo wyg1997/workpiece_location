@@ -52,13 +52,18 @@ def eval_key_points(kps, anns, size=40):
             n_tars = tars.shape[0]
 
             ok = 0
+            visit = []
             for i_d in range(n_dets):
                 for i_t in range(n_tars):
+                    # continue if it have been hitted
+                    if i_t in visit:
+                        continue
                     if is_in_range(dets[i_d], tars[i_t], size):
                         ok += 1
                         dis = math.sqrt(
                             calc_distance_square(dets[i_d], tars[i_t]))
                         avg_offset.update(dis)
+                        visit.append(i_t)
                         break
             precision.update(1, ok)
             precision.update(0, n_dets-ok)

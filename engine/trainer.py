@@ -174,7 +174,7 @@ class Trainer:
                                        stride=self.cfg.MODEL.STRIDE,
                                        mean=self.cfg.TRAIN.MEAN,
                                        std=self.cfg.TRAIN.STD,
-                                       alpha=0.7)
+                                       alpha=0.5)
                 self.vis.images(vis_images, win='train_results',
                                 opts=dict(title='train_results'))
 
