@@ -72,7 +72,6 @@ _C.TRAIN.STD = [0.229, 0.224, 0.225]
 # random lightning and contrast
 _C.TRAIN.DO_LIGHTNING = False
 _C.TRAIN.MAX_LIGHTNING = 0.2
-_C.TRAIN.P_LIGHTNING = 0.75
 # heatmap parameters
 _C.TRAIN.SIGMA = 5
 
