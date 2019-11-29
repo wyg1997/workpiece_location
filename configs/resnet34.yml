@@ -1,5 +1,5 @@
 MODEL:
-    NAME: 'type-c'
+    NAME: 'base'
     VERSION: 'v0'
     DESCRIPTION: 'Resnet34 model with MSELoss'
     CLASSES: []
@@ -7,54 +7,57 @@ MODEL:
 
 
 TRAIN:
-    DATA_ROOT: 'data/type-c/train'
-    SIZE: [256, 320]
-    MEAN: [0.152, 0.152, 0.152]
-    STD: [0.251, 0.251, 0.251]
-    IMG_TYPE: 'png'
-    SIGMA: 5
+    DATA_ROOT: 'data/base/train'
+    IMG_INDEX: [1, 4, 8 ,26]
+    IMG_SIZE: [480, 640]
+    MEAN: [0.177, 0.177, 0.177]
+    STD: [0.151, 0.151, 0.151]
+    IMG_TYPE: 'bmp'
+    SIGMA: 8
     DO_FLIP: False
     FLIP_PROB: 0.5
     DO_SCALE: True
     SCALE_RANGE: [0.8, 1.0]
-    DO_ROTATE: False
-    ROTATE_RANGE: [-5.0, 5.0]
+    DO_ROTATE: True
+    ROTATE_RANGE: [-15.0, 15.0]
     DO_ALBU: True
-    ALBU_BRIGHTNESS: 0.2
+    ALBU_BRIGHTNESS: 0.5
     ALBU_CONTRAST: 0.5
     ALBU_SATURATION: 0.5
     ALBU_HUE: 0.0
+    SIZE: 20
 
 
 TEST:
-    DATA_ROOT: 'data/type-c/test'
-    SIZE: [256, 320]
-    MEAN: [0.152, 0.152, 0.152]
-    STD: [0.251, 0.251, 0.251]
-    IMG_TYPE: 'png'
+    DATA_ROOT: 'data/base/test'
+    IMG_SIZE: [480, 640]
+    MEAN: [0.177, 0.177, 0.177]
+    STD: [0.151, 0.151, 0.151]
+    IMG_TYPE: 'bmp'
+    SIZE: 20
 
 
 DATALOADER:
     TRAIN:
         BATCH_SIZE: 4
-        WORKERS: 8
+        WORKERS: 0
     TEST:
-        BATCH_SIZE: 8
-        WORKERS: 8
+        BATCH_SIZE: 1
+        WORKERS: 0
 
 
 SOLVER:
-    EPOCHS: 80
+    EPOCHS: 200
     # loss function
     LOSS: 'MSELoss'
     # optimizer
     OPT: 'adam'
     BASE_LR: 0.0005
     MOMENTUM: 0.9
-    WEIGHT_DECAY: 0.0001
+    WEIGHT_DECAY: 0.0005
     # step
     GAMMA: 0.1
-    STEPS: [30, 60]
+    STEPS: [60, 120, 180]
     # warm up
     WARMUP_FACTOR: 0.33
     WARMUP_ITERS: 6
@@ -62,7 +65,7 @@ SOLVER:
     # log
     LOG_INTERVAL: 1
     # eval
-    EVAL_EPOCH: 1
+    EVAL_EPOCH: 10
     # save model
     CHECKPOINT: 10
 
