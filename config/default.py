@@ -50,7 +50,7 @@ _C.TRAIN.IMG_TYPE = 'png'
 # image index(optional, set None will train all images)
 _C.TRAIN.IMG_INDEX = []
 # size: [h, w]
-_C.TRAIN.SIZE = [512, 512]
+_C.TRAIN.IMG_SIZE = [512, 512]
 # do flip
 _C.TRAIN.DO_FLIP = False
 _C.TRAIN.FLIP_PROB = 0.5
@@ -74,6 +74,8 @@ _C.TRAIN.DO_LIGHTNING = False
 _C.TRAIN.MAX_LIGHTNING = 0.2
 # heatmap parameters
 _C.TRAIN.SIGMA = 5
+# feature size
+_C.TRAIN.SIZE = 40
 
 
 ###############
@@ -88,7 +90,7 @@ _C.TEST.IMG_TYPE = 'png'
 # image index(optional, set None will train all images)
 _C.TEST.IMG_INDEX = []
 # size: [h, w]
-_C.TEST.SIZE = [512, 512]
+_C.TEST.IMG_SIZE = [512, 512]
 # do flip
 _C.TEST.DO_FLIP = False
 # do scale
@@ -103,8 +105,7 @@ _C.TEST.STD = [0.229, 0.224, 0.225]
 # random lightning and contrast
 _C.TEST.DO_LIGHTNING = False
 _C.TEST.MAX_LIGHTNING = 0.2
-_C.TEST.P_LIGHTNING = 0.75
-
+_C.TEST.SIZE = 40
 
 ##############
 # DataLoader #

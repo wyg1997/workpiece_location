@@ -86,6 +86,7 @@ class ResNet(nn.Module):
                 nn.Conv2d(64, nparts, 1, 1),
                 #nn.LeakyReLU()
                 nn.Softmax(dim=1)
+                # nn.Sigmoid() # not work
                 )
         
         

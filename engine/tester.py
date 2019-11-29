@@ -21,7 +21,7 @@ class Tester:
 
         self.test_cnt = 0
 
-    def test(self, threshold=0.5, size=40):
+    def test(self, threshold=0.5, show=False):
         self.model.eval()
 
         eval_dis = AverageMeter()
@@ -35,12 +35,21 @@ class Tester:
             with torch.no_grad():
                 outputs = self.model(imgs)
             results = outputs.cpu().detach()
+
+            # vis results
+            if show:
+                vis_img = visualize(ori_imgs, results,
+                                    stride=self.cfg.MODEL.STRIDE,
+                                    mean=self.cfg.TEST.MEAN,
+                                    std=self.cfg.TEST.STD)
+                self.vis.images(vis_img, win=f"test_results[{i}]")
+
             
             kps = get_kps_from_heatmap(results,
                                        self.cfg.MODEL.STRIDE,
                                        threshold=threshold,
-                                       size=size)
-            dis, p, r = eval_key_points(kps, data['anns'], size=40)
+                                       size=self.cfg.TEST.SIZE)
+            dis, p, r = eval_key_points(kps, data['anns'], size=self.cfg.TEST.SIZE)
             
             eval_dis.update(dis)
             eval_p.update(p)

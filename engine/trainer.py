@@ -84,7 +84,7 @@ class Trainer:
                          f"loss: {self.running_loss.avg:.5f}")
         # test
         if self.current_epoch % self.cfg.SOLVER.EVAL_EPOCH == 0:
-            self.tester.test()
+            self.tester.test(threshold=0.5, show=True)
         print()
 
     def training_epoch(self):
@@ -114,7 +114,7 @@ class Trainer:
             kps = get_kps_from_heatmap(results,
                                        self.cfg.MODEL.STRIDE,
                                        threshold=0.5,
-                                       size=40)
+                                       size=self.cfg.TRAIN.SIZE)
             dis, p, r = eval_key_points(kps, data['anns'], size=40)
 
             loss = loss.item()

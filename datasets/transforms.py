@@ -32,7 +32,7 @@ class Pipline:
 
         # include [Resize, Flip, Lighting, Normalize]
         self.pipline = []
-        self.pipline.append(Resize(self.cfg.SIZE,
+        self.pipline.append(Resize(self.cfg.IMG_SIZE,
                                    pad_color=self.cfg.MEAN,
                                    keep_ratio=True))
         if self.cfg.DO_FLIP:

@@ -24,6 +24,7 @@ def get_dataloader(cfg, kind, CLASSES=[]):
                                       num_workers=cfg.DATALOADER.TRAIN.WORKERS,
                                       pin_memory=True
                                      )
+        cprint(f"finish loading, the number of images is {len(train_imgs)}")
         return train_dataloader, train_imgs.CLASSES
     elif kind == 'test':
         assert CLASSES is not None, "test dataloader `CLASSES` must not be None."
@@ -35,6 +36,7 @@ def get_dataloader(cfg, kind, CLASSES=[]):
                                      shuffle=False,
                                      num_workers=cfg.DATALOADER.TEST.WORKERS,
                                     )
+        cprint(f"finish loading, the number of images is {len(test_dataloader)}")
         return test_dataloader
     else:
         cprint(f"dataloader kind must be one of {_ALL_KIND}")
