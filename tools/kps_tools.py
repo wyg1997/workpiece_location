@@ -132,18 +132,22 @@ def get_kps_from_heatmap(heatmap, stride, threshold=0.5, size=40):
             heatmap, scale_factor=stride, mode='bicubic', align_corners=False)
     heatmap = heatmap.numpy()
 
-    batch = heatmap.shape[0]
-    num_cls = heatmap.shape[1] - 1
+    batch, num_cls, h, w = heatmap.shape
 
     for i in range(batch):
         kps = []
         for j in range(1, num_cls + 1):
             # attention: heatmap[n, cls, h, w] -> [y, x]
             yy, xx = np.where(heatmap[i, j] > threshold)
-            score = heatmap[i, j, yy, xx]
 
-            # get key points by nms
-            res = nms_points(xx, yy, score, size)
+            # continue if res is too many
+            if xx.size > h*w*0.1:
+                cprint('too many result points, skipping nms...', level='debug')
+                res = []
+            else:
+                score = heatmap[i, j, yy, xx]
+                # get key points by nms
+                res = nms_points(xx, yy, score, size)
 
             kps.append(res)
         keypoints.append(kps)
