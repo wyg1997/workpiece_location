@@ -131,12 +131,12 @@ class Pipline:
 
         heatmaps = np.zeros((num_cls, H//stride, W//stride)).astype(np.float32)
 
-        points = ann['locations']
-        labels = ann['labels']
+        points = ann['locations'].data
+        labels = ann['labels'].data
         num_points = points.shape[0]
 
         for i in range(num_points):
-            label = labels[i]
+            label = labels.data[i]
             heatmap = self.get_gussian_target(points[i], size, stride, sigma)
             heatmaps[label] = np.maximum(heatmap, heatmaps[label])
 
@@ -225,8 +225,8 @@ class Resize:
         r_h, r_w = ratio
 
         # resize labels
-        ann['locations'] = ann['locations'].astype(np.float) * [r_w, r_h]
-        ann['sizes'] = ann['sizes'].astype(np.float) * max(r_h, r_w)
+        ann['locations'].data = ann['locations'].data.astype(np.float) * [r_w, r_h]
+        ann['sizes'].data = ann['sizes'].data.astype(np.float) * max(r_h, r_w)
 
         return ann
 
@@ -267,7 +267,7 @@ class Flip:
 
     def _flip_ann(self, ann, size):
         _, w = size
-        ann['locations'][:, 0] = -ann['locations'][:, 0] + w
+        ann['locations'].data[:, 0] = -ann['locations'].data[:, 0] + w
         # TODO: support flip directions
         return ann
 
@@ -344,9 +344,9 @@ class Scale:
         """
         shift_x, shift_y = shift
 
-        ann['locations'] = \
-            ann['locations'].astype(np.float) * factor + [shift_x, shift_y]
-        ann['sizes'] = ann['sizes'].astype(np.float) * factor
+        ann['locations'].data = \
+            ann['locations'].data.astype(np.float) * factor + [shift_x, shift_y]
+        ann['sizes'].data = ann['sizes'].data.astype(np.float) * factor
         return ann
 
 
@@ -410,8 +410,8 @@ class Rotate:
         return img
 
     def _rotate_ann(self, ann, M):
-        ann['locations'] = np.insert(ann['locations'], 2, 1, axis=1).T # shape [3, n]
-        ann['locations'] = np.matmul(M, ann['locations']).T # [2, 3] * [3, n]
+        ann['locations'].data = np.insert(ann['locations'].data, 2, 1, axis=1).T # shape [3, n]
+        ann['locations'].data = np.matmul(M, ann['locations'].data).T # [2, 3] * [3, n]
         # TODO: rotate directions
         return ann
 

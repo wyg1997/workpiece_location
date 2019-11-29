@@ -8,6 +8,7 @@ from copy import deepcopy
 
 import numpy as np
 from utils.cprint import cprint
+from datasets.data_container import DataContainer
 
 
 class ImageDataset:
@@ -136,10 +137,10 @@ class ImageDataset:
             directions = np.array(directions)
 
         ann = dict(
-            locations = locations.astype(np.int),
-            labels = labels.astype(np.int),
-            sizes = sizes.astype(np.int),
-            directions = directions.astype(np.float)
+            locations = DataContainer(locations.astype(np.int)),
+            labels = DataContainer(labels.astype(np.int)),
+            sizes = DataContainer(sizes.astype(np.int)),
+            directions = DataContainer(directions.astype(np.float))
         )
         return dict(width=width, height=height, ann=ann)
 

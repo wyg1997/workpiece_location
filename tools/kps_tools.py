@@ -18,8 +18,8 @@ def eval_key_points(kps, anns, size=40):
     Inputs:
         kps -> list with shape [n, k-1, m, 3]
             All keypoints in heatmap with [x, y, score].
-        anns -> dict('locations': <tensor> (n, m, 2),
-                     'labels': <tensor> (n, m),
+        anns -> dict('locations': <ndarray> (n, m, 2),
+                     'labels': <ndarray> (n, m),
                      ...)
             Groundtruth keypoints(more informations see datasets/image_dataset.py).
 
@@ -31,9 +31,9 @@ def eval_key_points(kps, anns, size=40):
         recall -> Float
             Recall with results.
     """
-    locations = anns['locations']
-    labels = anns['labels']
-    assert len(kps) == locations.shape[0]
+    locations = [x.data for x in anns['locations']]
+    labels = [x.data for x in anns['labels']]
+    assert len(kps) == len(locations)
 
     avg_offset = AverageMeter()
     precision = AverageMeter()
@@ -46,7 +46,7 @@ def eval_key_points(kps, anns, size=40):
     for i in range(n_batch):
         for j in range(n_cls):
             dets = kps[i][j]
-            tars = locations[i, labels[i] == j+1]
+            tars = locations[i][labels[i] == j+1]
 
             n_dets = len(dets)
             n_tars = tars.shape[0]
