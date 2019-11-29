@@ -39,7 +39,7 @@ def get_dataloader(cfg, kind, CLASSES=[]):
                                      shuffle=False,
                                      num_workers=cfg.DATALOADER.TEST.WORKERS,
                                     )
-        cprint(f"finish loading, the number of images is {len(test_dataloader)}")
+        cprint(f"finish loading, the number of images is {len(test_imgs)}")
         return test_dataloader
     else:
         cprint(f"dataloader kind must be one of {_ALL_KIND}")
