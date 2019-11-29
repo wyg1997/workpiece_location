@@ -23,7 +23,7 @@ class Trainer:
         # dataloader
         self.train_dataloader, self.classes = \
             get_dataloader(cfg, kind='train', CLASSES=cfg.MODEL.CLASSES)
-        self.num_cls = len(self.classes) + 1
+        self.num_cls = len(self.classes)
         self.logger.info(f"classes: {self.classes}")
 
         # model
@@ -177,6 +177,18 @@ class Trainer:
                                        alpha=0.5)
                 self.vis.images(vis_images, win='train_results',
                                 opts=dict(title='train_results'))
+
+            # see 2D heatmap
+            if i == 0:
+                for cls_idx in range(self.num_cls):
+                    self.vis.surf(results[0][cls_idx],
+                                  win=f"heatmap_cls_{cls_idx}",
+                                  opts=dict(title=f"heatmap_cls_{cls_idx}"))
+                for cls_idx in range(self.num_cls):
+                    self.vis.surf(ori_targets[0][cls_idx],
+                                  win=f"target_heatmap_cls_{cls_idx}",
+                                  opts=dict(title=f"target_heatmap_cls_{cls_idx}"))
+                # input('press enter to continue...')
 
     def train(self):
         self.on_train_begin()

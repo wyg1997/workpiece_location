@@ -108,7 +108,7 @@ class ImageDataset:
             # check label
             if name not in self.CLASSES:
                 self.CLASSES.append(name)
-                self.cat2label[name] = len(self.CLASSES)
+                self.cat2label[name] = len(self.CLASSES) - 1
             label = self.cat2label[name]
 
             loc = point.find('location')
@@ -191,4 +191,4 @@ class ImageDataset:
         img_info = self.img_infos[idx]
         results = dict(img_info=deepcopy(img_info))
         self.pre_pipeline(results)
-        return self.pipeline(results, len(self.CLASSES)+1)
+        return self.pipeline(results, len(self.CLASSES))

@@ -85,7 +85,7 @@ class ResNet(nn.Module):
                 UpBlock(128, 64, upsample=False),
                 nn.Conv2d(64, nparts, 1, 1),
                 #nn.LeakyReLU()
-                nn.Softmax(dim=1)
+                # nn.Softmax(dim=1)
                 # nn.Sigmoid() # not work
                 )
         

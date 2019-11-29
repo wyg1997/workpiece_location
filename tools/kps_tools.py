@@ -16,7 +16,7 @@ def eval_key_points(kps, anns, size=40):
     Compare detection results with groundtruth.
 
     Inputs:
-        kps -> list with shape [n, k-1, m, 3]
+        kps -> list with shape [n, k, m, 3]
             All keypoints in heatmap with [x, y, score].
         anns -> dict('locations': <ndarray> (n, m, 2),
                      'labels': <ndarray> (n, m),
@@ -46,7 +46,7 @@ def eval_key_points(kps, anns, size=40):
     for i in range(n_batch):
         for j in range(n_cls):
             dets = kps[i][j]
-            tars = locations[i][labels[i] == j+1]
+            tars = locations[i][labels[i] == j]
 
             n_dets = len(dets)
             n_tars = tars.shape[0]
@@ -122,7 +122,7 @@ def get_kps_from_heatmap(heatmap, stride, threshold=0.5, size=40):
             The size of points used in nms.
 
     Output:
-        keypoints -> list with shape [n, k-1, m, 3]
+        keypoints -> list with shape [n, k, m, 3]
             All keypoints in heatmap with [x, y, score].
     """
     keypoints = []
@@ -136,7 +136,7 @@ def get_kps_from_heatmap(heatmap, stride, threshold=0.5, size=40):
 
     for i in range(batch):
         kps = []
-        for j in range(1, num_cls + 1):
+        for j in range(num_cls):
             # attention: heatmap[n, cls, h, w] -> [y, x]
             yy, xx = np.where(heatmap[i, j] > threshold)
 
