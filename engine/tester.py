@@ -42,7 +42,8 @@ class Tester:
                                     stride=self.cfg.MODEL.STRIDE,
                                     mean=self.cfg.TEST.MEAN,
                                     std=self.cfg.TEST.STD)
-                self.vis.images(vis_img, win=f"test_results[{i}]")
+                self.vis.images(vis_img, win=f"test_results[{i}]",
+                                opts=dict(title=f"test_results[{i}]"))
 
             
             kps = get_kps_from_heatmap(results,
