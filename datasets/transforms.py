@@ -140,6 +140,8 @@ class Pipline:
             heatmap = self.get_gussian_target(points[i], size, stride, sigma)
             heatmaps[label] = np.maximum(heatmap, heatmaps[label])
 
+        heatmaps[0] = 1.0 - heatmaps[1:].sum(axis=0)
+
         return heatmaps
 
 

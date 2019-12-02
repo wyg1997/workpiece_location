@@ -133,6 +133,7 @@ def get_kps_from_heatmap(heatmap, stride, threshold=0.5, size=40):
     heatmap = heatmap.numpy()
 
     batch, num_cls, h, w = heatmap.shape
+    num_cls -= 1
 
     for i in range(batch):
         kps = []
