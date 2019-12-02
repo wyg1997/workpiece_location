@@ -178,17 +178,17 @@ class Trainer:
                 self.vis.images(vis_images, win='train_results',
                                 opts=dict(title='train_results'))
 
-            # see 2D heatmap
-            if i == 0:
-                for cls_idx in range(self.num_cls):
-                    self.vis.surf(results[0][cls_idx],
-                                  win=f"heatmap_cls_{cls_idx}",
-                                  opts=dict(title=f"heatmap_cls_{cls_idx}"))
-                for cls_idx in range(self.num_cls):
-                    self.vis.surf(ori_targets[0][cls_idx],
-                                  win=f"target_heatmap_cls_{cls_idx}",
-                                  opts=dict(title=f"target_heatmap_cls_{cls_idx}"))
-                # input('press enter to continue...')
+            # # see 2D heatmap
+            # if i == 0:
+            #     for cls_idx in range(self.num_cls):
+            #         self.vis.surf(results[0][cls_idx],
+            #                       win=f"heatmap_cls_{cls_idx}",
+            #                       opts=dict(title=f"heatmap_cls_{cls_idx}"))
+            #     for cls_idx in range(self.num_cls):
+            #         self.vis.surf(ori_targets[0][cls_idx],
+            #                       win=f"target_heatmap_cls_{cls_idx}",
+            #                       opts=dict(title=f"target_heatmap_cls_{cls_idx}"))
+            #     # input('press enter to continue...')
 
     def train(self):
         self.on_train_begin()

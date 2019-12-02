@@ -58,7 +58,7 @@ class ImageDataset:
         if CLASSES is not None:
             self.CLASSES = CLASSES
             for i, cls in enumerate(CLASSES):
-                self.cat2label[cls] = i+1
+                self.cat2label[cls] = i
 
         # load annotations (and proposals)
         self.img_infos = self.load_annotations(self.data_root)
