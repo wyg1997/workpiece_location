@@ -42,6 +42,7 @@ def visualize(imgs, targets=None, stride=1,
 
     if stride != 1:
         targets = F.interpolate(targets, scale_factor=stride, mode='bicubic', align_corners=False)
+        targets = targets.clamp(min=0.0, max=1.0)
     
     # tensor to numpy
     imgs = imgs.numpy()
