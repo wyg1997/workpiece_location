@@ -13,6 +13,7 @@ from utils.cprint import cprint
 from solver.build import make_optimizer, make_lr_scheduler, make_loss_function
 from tools.visualize import visualize
 from tools.kps_tools import get_kps_from_heatmap, eval_key_points
+from models.build import build_model
 from .tester import Tester
 
 
@@ -28,17 +29,7 @@ class Trainer:
 
         # model
         # fcn
-        from models.resnet34 import resnet34
-        self.model = resnet34(True, self.num_cls)
-
-        # # hg
-        # from models.hg import hg
-        # self.model = hg(num_stacks=4,
-        #                 num_blocks=4,
-        #                 num_classes=5,
-        #                 resnet_layers=50)
-
-        # self.logger.info(f"model: \n{self.model}")
+        self.model = build_model(cfg.MODEL.BACKBONE, self.num_cls, cfg.MODEL.PRETRAIN)
 
         # Tester
         self.tester = Tester(cfg, logger, vis, work_dir, self.model, self.classes)

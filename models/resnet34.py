@@ -65,7 +65,6 @@ class BasicBlock(nn.Module):
         return out
 
 class ResNet(nn.Module):
-
     def __init__(self, block, layers, nparts):
         self.inplanes = 64
         super(ResNet, self).__init__()
@@ -85,8 +84,6 @@ class ResNet(nn.Module):
                 UpBlock(128, 64, upsample=False),
                 nn.Conv2d(64, nparts, 1, 1),
                 #nn.LeakyReLU()
-                # nn.Softmax(dim=1)
-                # nn.Sigmoid() # not work
                 )
         
         
@@ -122,7 +119,7 @@ class ResNet(nn.Module):
 
         return z
 
-def resnet34(pretrained=False, nparts=15):
+def build_resnet34(pretrained=False, nparts=15):
     model = ResNet(BasicBlock, [3, 4, 6, 3], nparts=nparts)
 
     if pretrained:

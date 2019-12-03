@@ -20,10 +20,8 @@ _C.MODEL.NAME = 'baseline'
 _C.MODEL.VERSION = 'v0'
 _C.MODEL.DESCRIPTION = '*** Please type in model description ***'
 # backbone
-# TODO: support other backbone
-_C.MODEL.BACKBONE = 'resnet50'
+_C.MODEL.BACKBONE = 'resnet34'
 # pretrain
-# TODO: useless
 _C.MODEL.PRETRAIN = True
 # TODO: load checkpoint and continue train
 _C.MODEL.RESUME = ''
