@@ -3,7 +3,7 @@ import math
 from torch import clamp 
 import torch.utils.model_zoo as model_zoo
 
-__all__ = ['fcn']
+__all__ = ['resnet34']
 
 model_urls = {
     'resnet34': 'https://download.pytorch.org/models/resnet34-333f7ec4.pth',
@@ -122,7 +122,7 @@ class ResNet(nn.Module):
 
         return z
 
-def fcn(pretrained=False, nparts=15):
+def resnet34(pretrained=False, nparts=15):
     model = ResNet(BasicBlock, [3, 4, 6, 3], nparts=nparts)
 
     if pretrained:

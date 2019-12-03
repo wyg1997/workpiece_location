@@ -28,8 +28,8 @@ class Trainer:
 
         # model
         # fcn
-        from models.FCN import fcn
-        self.model = fcn(True, self.num_cls)
+        from models.resnet34 import resnet34
+        self.model = resnet34(True, self.num_cls)
 
         # # hg
         # from models.hg import hg
