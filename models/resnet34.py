@@ -119,7 +119,7 @@ class ResNet(nn.Module):
 
         return z
 
-def build_resnet34(pretrained=False, nparts=15):
+def build_resnet34(pretrained, nparts):
     model = ResNet(BasicBlock, [3, 4, 6, 3], nparts=nparts)
 
     if pretrained:
