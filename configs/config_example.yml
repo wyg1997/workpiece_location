@@ -1,0 +1,80 @@
+# 模型相关参数
+MODEL:
+    # 模型名字和模型版本两个参数控制着生成的文件目录
+    NAME: 'base'  # 模型名字
+    VERSION: 'v0'  # 模型版本
+    DESCRIPTION: 'Resnet34 model with MSELoss'  # 模型描述
+    CLASSES: []  # 可以指定类别顺序，如果为空则自动在数据集中检索
+    STRIDE: 4  # 模型输出与输入的尺寸步长，如输入为64*64，步长为4，则输出为16*16
+    BACKBONE: 'resnet34'  # 选择backbone
+    PRETRAIN: True  # 是否使用pretrain模型
+
+
+# 训练相关参数
+TRAIN:
+    DATA_ROOT: 'data/base/train'  # 训练数据目录，目录下包括source和label两个目录
+    IMG_INDEX: [1, 4, 8 ,26]  # 训练图片的前缀id，如果为空则自动检索目录下所有id
+    IMG_SIZE: [480, 640]  # 输入图片resize的大小(保持图片比例)
+    MEAN: [0.177, 0.177, 0.177]  # 样本均值
+    STD: [0.151, 0.151, 0.151]  # 样本方差
+    IMG_TYPE: 'bmp'  # 图片后缀
+    SIGMA: 10  # 二维高斯分布的范围
+    DO_FLIP: False  # 是否做翻转
+    FLIP_PROB: 0.5  # 翻转几率
+    DO_SCALE: True  # 是否做缩放处理
+    SCALE_RANGE: [0.8, 1.0]  # 缩放比例范围(只支持缩小操作，即值小于等于1)
+    DO_ROTATE: True  # 是否做旋转
+    ROTATE_RANGE: [-15.0, 15.0]  # 旋转角度范围
+    DO_ALBU: True  # 是否改变光照
+    ALBU_BRIGHTNESS: 0.5  # 亮度
+    ALBU_CONTRAST: 0.5  # 对比度
+    ALBU_SATURATION: 0.5  # 色彩饱和度
+    ALBU_HUE: 0.0  # 色调
+    SIZE: 20  # 特征的大小，nms时的采样密度
+
+
+# 测试时的参数，和训练参数意思相同
+TEST:
+    DATA_ROOT: 'data/base/test'
+    IMG_INDEX: []
+    IMG_SIZE: [480, 640]
+    MEAN: [0.177, 0.177, 0.177]
+    STD: [0.151, 0.151, 0.151]
+    IMG_TYPE: 'bmp'
+    SIZE: 20
+
+
+# 数据加载参数
+DATALOADER:
+    TRAIN:
+        BATCH_SIZE: 4  # batch size
+        WORKERS: 0  # 处理样本的线程数，0为使用主线程
+    TEST:
+        BATCH_SIZE: 8
+        WORKERS: 0
+
+
+# 训练时的超参数
+SOLVER:
+    EPOCHS: 300  # 迭代次数
+    # loss function
+    LOSS: 'MSELoss'  # 使用loss的名字
+    # optimizer
+    OPT: 'adam'  # 优化器名字
+    BASE_LR: 0.001  # 基础学习率
+    # MOMENTUM: 0.9
+    WEIGHT_DECAY: 0.0001  # 权重衰减系数
+    # step
+    GAMMA: 0.1  # 到达step时学习率的变化因子
+    STEPS: [90, 180, 270]  # 哪些step减小学习率
+    # warm up
+    WARMUP_FACTOR: 0.33  # warmup因子
+    WARMUP_ITERS: 6  # warmup迭代数
+    WARMUP_METHOD: 'linear'  # warmup方式
+    # log
+    LOG_INTERVAL: 1  # 每多少次迭代打印log
+    # eval
+    EVAL_EPOCH: 10  # 每多少个epoch测试
+    # save model
+    CHECKPOINT: 10  # 每多少个epoch保存模型参数
+
