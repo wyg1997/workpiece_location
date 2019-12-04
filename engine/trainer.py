@@ -75,7 +75,7 @@ class Trainer:
                          f"loss: {self.running_loss.avg:.5f}")
         # test
         if self.current_epoch % self.cfg.SOLVER.EVAL_EPOCH == 0:
-            self.tester.test(threshold=0.5, show=True)
+            self.tester.test(threshold=0.5, show=self.cfg.VISDOM.SHOW_TEST_OUT)
         print()
 
     def training_epoch(self):
@@ -151,7 +151,7 @@ class Trainer:
                           opts=dict(title='train_dis_loss'))
 
             # see train data
-            if i == 0:
+            if self.cfg.VISDOM.SHOW_LABEL and i == 0:
                 vis_images = visualize(ori_imgs, ori_targets,
                                        stride=self.cfg.MODEL.STRIDE,
                                        mean=self.cfg.TRAIN.MEAN,
@@ -160,7 +160,7 @@ class Trainer:
                                 opts=dict(title='label'))
 
             # see train results
-            if i == 0:
+            if self.cfg.VISDOM.SHOW_TRAIN_OUT and i == 0:
                 vis_images = visualize(ori_imgs, results,
                                        stride=self.cfg.MODEL.STRIDE,
                                        mean=self.cfg.TRAIN.MEAN,
