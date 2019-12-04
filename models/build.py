@@ -3,8 +3,9 @@
 
 from utils.cprint import cprint
 from .resnet34 import build_resnet34
+from .mobilenet_v1 import build_mobilenet_v1
 
-_ALL_MODELS = ['resnet34']
+_ALL_MODELS = ['resnet34', 'mobilenet_v1']
 
 def build_model(model_name, num_cls, pretrain=False):
     if model_name not in _ALL_MODELS:
@@ -15,6 +16,8 @@ def build_model(model_name, num_cls, pretrain=False):
 
     if model_name == 'resnet34':
         model = build_resnet34(pretrain, nparts=num_cls)
+    elif model_name == 'mobilenet_v1':
+        model = build_mobilenet_v1(pretrain, nparts=num_cls)
 
     # check
     if model is None:

@@ -34,7 +34,10 @@ class Tester:
             imgs = ori_imgs.cuda()
             with torch.no_grad():
                 outputs = self.model(imgs)
-            results = outputs.cpu().detach()
+            if isinstance(outputs, list):
+                results = outputs[-1].cpu().detach()
+            else:
+                results = outputs.cpu().detach()
 
             # vis results
             if show:

@@ -1,4 +1,5 @@
 data/
 example/
+pretrain/
 **/.ipynb_checkpoints/
 **/__pycache__/

@@ -91,7 +91,12 @@ class Trainer:
             outputs = self.model(imgs)
 
             # get loss
-            loss = self.criterion(outputs, targets)
+            if isinstance(outputs, list):
+                loss = self.criterion(outputs[0], targets)
+                for out_idx in range(1, len(outputs)):
+                    loss += self.criterion(outputs[out_idx], targets)
+            else:
+                loss = self.criterion(outputs, targets)
 
             # backward step
             loss.backward()
@@ -101,7 +106,10 @@ class Trainer:
             cost_time = time.time() - start_time
 
             # precisions of results
-            results = outputs.cpu().detach()
+            if isinstance(outputs, list):
+                results = outputs[-1].cpu().detach()
+            else:
+                results = outputs.cpu().detach()
             kps = get_kps_from_heatmap(results,
                                        self.cfg.MODEL.STRIDE,
                                        threshold=0.5,

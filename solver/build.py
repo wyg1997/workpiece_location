@@ -5,6 +5,7 @@ import torch
 
 from utils.cprint import cprint
 from .lr_scheduler import WarmupMultiStepLR
+from .get_parameters import get_parameters_conv, get_parameters_bn, get_parameters_conv_depthwise
 
 
 _ALL_OPTIMIZER = ['sgd', 'adam', 'rmsprop']
@@ -20,9 +21,22 @@ def make_optimizer(solver_cfg, model):
                                    weight_decay=solver_cfg.WEIGHT_DECAY,
                                    momentum=solver_cfg.MOMENTUM)
     elif opt_name == 'adam':
-        opt_func = torch.optim.Adam(model.parameters(),
-                                    lr=solver_cfg.BASE_LR,
-                                    weight_decay=solver_cfg.WEIGHT_DECAY)
+        base_lr = solver_cfg.BASE_LR
+        opt_func = torch.optim.Adam([
+            {'params': get_parameters_conv(model.model, 'weight')},
+            {'params': get_parameters_conv_depthwise(model.model, 'weight'), 'weight_decay': 0},
+            {'params': get_parameters_bn(model.model, 'weight'), 'weight_decay': 0},
+            {'params': get_parameters_bn(model.model, 'bias'), 'lr': base_lr * 2, 'weight_decay': 0},
+            {'params': get_parameters_conv(model.cpm, 'weight'), 'lr': base_lr},
+            {'params': get_parameters_conv(model.cpm, 'bias'), 'lr': base_lr * 2, 'weight_decay': 0},
+            {'params': get_parameters_conv_depthwise(model.cpm, 'weight'), 'weight_decay': 0},
+            {'params': get_parameters_conv(model.initial_stage, 'weight'), 'lr': base_lr},
+            {'params': get_parameters_conv(model.initial_stage, 'bias'), 'lr': base_lr * 2, 'weight_decay': 0},
+            {'params': get_parameters_conv(model.refinement_stages, 'weight'), 'lr': base_lr * 4},
+            {'params': get_parameters_conv(model.refinement_stages, 'bias'), 'lr': base_lr * 8, 'weight_decay': 0},
+            {'params': get_parameters_bn(model.refinement_stages, 'weight'), 'weight_decay': 0},
+            {'params': get_parameters_bn(model.refinement_stages, 'bias'), 'lr': base_lr * 2, 'weight_decay': 0},
+        ], lr=base_lr, weight_decay=solver_cfg.WEIGHT_DECAY)
     elif opt_name == 'rmsprop':
         opt_func = torch.optim.RMSprop(model.parameters(),
                                        lr=solver_cfg.BASE_LR,
