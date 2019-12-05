@@ -50,17 +50,17 @@ CUDA_VISIBLE_DEVICE=1 python tools/train.py --config_file example/baseline/v0/re
 
 #### commit emoji释义
 
-| emoji | 释义 |
-| :-: | :- |
-| :tada: | 添加新特性、功能等 |
-| :fire: | 删除代码或文件 |
-| :memo: | 编写、修改文档 |
-| :art: | 更改代码格式、结构等不影响功能的问题 |
-| :bug: | 修复bug |
-| :zap: | 提升速度 |
-| :ambulance: | 修复重要bug |
-| :pencil2: | 修改错字 |
-| :poop: | 提交低质量代码，需要改进 |
-| :wrench: | 修改代码依赖 |
-| :bookmark: | 添加tag或release |
+|    emoji    |     代码      | 释义                                 |
+| :---------: | :-----------: | :----------------------------------- |
+|   :tada:    |   `:tada:`    | 添加新特性、功能等                   |
+|   :fire:    |   `:fire:`    | 删除代码或文件                       |
+|   :memo:    |   `:memo:`    | 编写、修改文档                       |
+|    :art:    |    `:art:`    | 更改代码格式、结构等不影响功能的问题 |
+|    :bug:    |    `:bug:`    | 修复bug                              |
+|    :zap:    |    `:zap:`    | 提升速度                             |
+| :ambulance: | `:ambulance:` | 修复重要bug                          |
+|  :pencil2:  |  `:pencil2:`  | 修改错字                             |
+|   :poop:    |   `:poop:`    | 提交低质量代码，需要改进             |
+|  :wrench:   |  `:wrench:`   | 修改代码依赖                         |
+| :bookmark:  | `:bookmark:`  | 添加tag或release                     |
 
