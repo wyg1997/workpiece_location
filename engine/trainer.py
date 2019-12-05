@@ -53,7 +53,6 @@ class Trainer:
     def on_train_begin(self):
         self.model = self.model.cuda()
         self.model.train()
-        self.criterion = self.criterion.cuda()
 
         self.running_loss = AverageMeter()
 

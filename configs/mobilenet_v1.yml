@@ -1,7 +1,7 @@
 MODEL:
     NAME: 'type-c'
     VERSION: 'v1'
-    DESCRIPTION: 'MobileNetV1 model with MSELoss'
+    DESCRIPTION: 'MobileNetV1 model with l2 loss'
     CLASSES: []
     STRIDE: 8
     BACKBONE: 'mobilenet_v1'
@@ -52,14 +52,14 @@ DATALOADER:
 SOLVER:
     EPOCHS: 200
     # loss function
-    LOSS: 'MSELoss'
+    LOSS: 'l2'
     # optimizer
     OPT: 'adam'
-    BASE_LR: 0.002
+    BASE_LR: 0.001
     MOMENTUM: 0.9
     WEIGHT_DECAY: 0.0001
     # step
-    GAMMA: 0.33
+    GAMMA: 0.1
     STEPS: [60, 120, 180]
     # warm up
     WARMUP_FACTOR: 0.33

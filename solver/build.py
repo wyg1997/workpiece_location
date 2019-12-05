@@ -6,10 +6,11 @@ import torch
 from utils.cprint import cprint
 from .lr_scheduler import WarmupMultiStepLR
 from .get_parameters import get_parameters_conv, get_parameters_bn, get_parameters_conv_depthwise
+from .loss.l2_loss import l2_loss
 
 
 _ALL_OPTIMIZER = ['sgd', 'adam', 'rmsprop']
-_ALL_LOSS_FUNCTION = ['mseloss']
+_ALL_LOSS_FUNCTION = ['mseloss', 'l2']
 
 
 def make_optimizer(solver_cfg, model):
@@ -66,6 +67,8 @@ def make_loss_function(loss_name):
 
     if loss_name == 'mseloss':
         loss_func = torch.nn.MSELoss()
+    elif loss_name == 'l2':
+        loss_func = l2_loss
     else:
         cprint(f"Unknown loss function {loss_name}, only support {_ALL_LOSS_FUNCTION}",
                level='error')
