@@ -46,3 +46,21 @@ CUDA_VISIBLE_DEVICE=1 python tools/train.py --config_file example/baseline/v0/re
 
 删掉后的权重也可以在[我的google网盘下载](https://drive.google.com/file/d/1EYHq40eTpk5FeWxaMrFS4BHxndoZAOKj/view?usp=sharing)。
 
+### 附录
+
+#### commit emoji释义
+
+| emoji | 释义 |
+| :-: | :- |
+| :tada: | 添加新特性、功能等 |
+| :fire: | 删除代码或文件 |
+| :memo: | 编写、修改文档 |
+| :art: | 更改代码格式、结构等不影响功能的问题 |
+| :bug: | 修复bug |
+| :zap: | 提升速度 |
+| :ambulance: | 修复重要bug |
+| :pencil2: | 修改错字 |
+| :poop: | 提交低质量代码，需要改进 |
+| :wrench: | 修改代码依赖 |
+| :bookmark: | 添加tag或release |
+
