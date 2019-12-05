@@ -70,7 +70,7 @@ def eval_key_points(kps, anns, size=40):
             recall.update(1, ok)
             recall.update(0, n_tars-ok)
 
-    return avg_offset.avg, precision.avg, recall.avg
+    return avg_offset, precision, recall
 
 
 def is_in_range(p1, p2, size):

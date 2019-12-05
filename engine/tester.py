@@ -55,9 +55,9 @@ class Tester:
                                        size=self.cfg.TEST.SIZE)
             dis, p, r = eval_key_points(kps, data['anns'], size=self.cfg.TEST.SIZE)
             
-            eval_dis.update(dis)
-            eval_p.update(p)
-            eval_r.update(r)
+            eval_dis.update(dis.avg, dis.count)
+            eval_p.update(p.avg, p.count)
+            eval_r.update(r.avg, r.count)
 
         self.test_cnt += 1
 

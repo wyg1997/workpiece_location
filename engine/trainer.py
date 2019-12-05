@@ -114,6 +114,7 @@ class Trainer:
                                        threshold=0.5,
                                        size=self.cfg.TRAIN.SIZE)
             dis, p, r = eval_key_points(kps, data['anns'], size=40)
+            dis, p, r = dis.avg, p.avg, r.avg
 
             loss = loss.item()
             current_lr = self.optimizer.param_groups[0]['lr']
