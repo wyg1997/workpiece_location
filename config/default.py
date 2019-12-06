@@ -28,7 +28,7 @@ _C.MODEL.RESUME = ''
 _C.MODEL.CHECKPOINT = ''
 # detect size and direction
 # TODO: support detect size and direction
-_C.MODEL.size = False
+_C.MODEL.SIZE = False
 _C.MODEL.DIRECTION = False
 # classes
 _C.MODEL.CLASSES = []
