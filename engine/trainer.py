@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding=utf-8
 
+import os
 import os.path as osp
 import time
 
@@ -62,6 +63,10 @@ class Trainer:
         self.running_loss.reset()
 
     def on_epoch_end(self):
+        # save model
+        if self.current_epoch % self.cfg.SOLVER.CHECKPOINT == 0:
+            self.save_checkpoints()
+
         elapsed = time.time() - self.time0
         mins = int(elapsed) // 60
         seconds = int(elapsed - mins*60)
@@ -76,6 +81,9 @@ class Trainer:
         if self.current_epoch % self.cfg.SOLVER.EVAL_EPOCH == 0:
             self.tester.test(threshold=0.5, show=self.cfg.VISDOM.SHOW_TEST_OUT)
         print()
+
+    def on_train_end(self):
+        self.save_checkpoints()
 
     def training_epoch(self):
         for i, data in enumerate(self.train_dataloader):
@@ -199,11 +207,14 @@ class Trainer:
 
             self.on_epoch_end()
 
-            if (epoch+1) % self.cfg.SOLVER.CHECKPOINT == 0:
-                self.save_checkpoints()
-
             # torch.cuda.empty_cache()
 
+        self.on_train_end()
+
     def save_checkpoints(self):
+        save_dir = osp.join(self.work_dir, 'checkpoints/')
+        if not osp.exists(save_dir):
+            os.makedirs(save_dir)
+
         torch.save(self.model.state_dict(),
-                   osp.join(self.work_dir, str(self.current_epoch))+'.pth')
+                   osp.join(save_dir, str(self.current_epoch))+'.pth')
