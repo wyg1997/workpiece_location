@@ -202,7 +202,7 @@ class Trainer:
             if (epoch+1) % self.cfg.SOLVER.CHECKPOINT == 0:
                 self.save_checkpoints()
 
-            torch.cuda.empty_cache()
+            # torch.cuda.empty_cache()
 
     def save_checkpoints(self):
         torch.save(self.model.state_dict(),
