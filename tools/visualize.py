@@ -10,13 +10,6 @@ import cv2
 from utils.cprint import cprint
 
 
-_color_map = [
-    'Viridis',
-    'Plasma',
-    'Inferno',
-    'Magma',
-]
-
 def visualize(imgs, targets=None,
               mean=[0, 0, 0], std=[1, 1, 1],
               alpha=0.5, threshold=0.3):
