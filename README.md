@@ -42,9 +42,9 @@ CUDA_VISIBLE_DEVICE=1 python tools/train.py --config_file example/baseline/v0/re
 
 网络结构参考了[Daniil-Osokin/lightweight-human-pose-estimation.pytorch](https://github.com/Daniil-Osokin/lightweight-human-pose-estimation.pytorch)。
 
-预训练权重来自[sgd_68.848](https://github.com/marvis/pytorch-mobilenet)，使用前需要把参数名字前的`module.`删除掉。
+预训练权重来自[sgd_68.848](https://github.com/marvis/pytorch-mobilenet)，使用前需要把参数名字前的`module.`删除掉。删掉后的权重也可以在[我的google网盘下载](https://drive.google.com/file/d/1EYHq40eTpk5FeWxaMrFS4BHxndoZAOKj/view?usp=sharing)。
 
-删掉后的权重也可以在[我的google网盘下载](https://drive.google.com/file/d/1EYHq40eTpk5FeWxaMrFS4BHxndoZAOKj/view?usp=sharing)。
+下载后把预训练模型重命名为`mobilenet_v1.pth`，放在工程根目录的`pretrain/`下。
 
 ### 附录
 
