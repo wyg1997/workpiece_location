@@ -5,7 +5,7 @@ import torch
 import numpy as np
 
 from datasets.build import get_dataloader
-from tools.kps_tools import get_kps_from_heatmap, eval_key_points
+from tools.kps_tools import get_kps_from_heatmap, eval_key_points, resize_heatmaps
 from utils.meters import AverageMeter
 from utils.cprint import cprint
 from tools.visualize import visualize
@@ -35,14 +35,14 @@ class Tester:
             with torch.no_grad():
                 outputs = self.model(imgs)
             if isinstance(outputs, list):
-                results = outputs[-1].cpu().detach()
+                results = outputs[-1]
             else:
-                results = outputs.cpu().detach()
+                results = outputs
+            results = resize_heatmaps(results, self.cfg.MODEL.STRIDE)
 
             # vis results
             if show:
-                vis_img = visualize(ori_imgs, results,
-                                    stride=self.cfg.MODEL.STRIDE,
+                vis_img = visualize(ori_imgs.numpy(), results,
                                     mean=self.cfg.TEST.MEAN,
                                     std=self.cfg.TEST.STD)
                 self.vis.images(vis_img, win=f"test_results[{i}]",
@@ -50,7 +50,6 @@ class Tester:
 
             
             kps = get_kps_from_heatmap(results,
-                                       self.cfg.MODEL.STRIDE,
                                        threshold=threshold,
                                        size=self.cfg.TEST.SIZE)
             dis, p, r = eval_key_points(kps, data['anns'], size=self.cfg.TEST.SIZE)

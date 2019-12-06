@@ -11,6 +11,31 @@ from utils.cprint import cprint
 from utils.meters import AverageMeter
 
 
+def resize_heatmaps(heatmaps, stride):
+    """
+    Resize heatmaps from tensor in cuda.
+    
+    Inputs:
+        heatmaps: The network output heatmaps with shape [n, c, h, w].
+        stride: The stride between origin images and heatmaps.
+
+    Outputs:
+        heatmaps: Result heatmaps with numpy.
+    """
+    # resize
+    if stride != 1:
+        heatmaps = F.interpolate(
+            heatmaps, scale_factor=stride, mode='bicubic', align_corners=False)
+
+    # to cpu
+    if heatmaps.is_cuda:
+        heatmaps = heatmaps.cpu()
+
+    # to numpy
+    heatmaps = heatmaps.detach().numpy()
+    return heatmaps
+
+
 def eval_key_points(kps, anns, size=40):
     """
     Compare detection results with groundtruth.
@@ -105,15 +130,13 @@ def nms_points(x, y, score, size=40):
     return points
 
 
-def get_kps_from_heatmap(heatmap, stride, threshold=0.5, size=40):
+def get_kps_from_heatmap(heatmap, threshold=0.5, size=40):
     """
     Calculate keypoints from heatmap.
 
     Input:
         heatmap -> torch with shape [n, k, h, w]
             The outputs from network.
-        stride -> Int
-            The stride of each pixel.
         trans_infos -> dict('do_flip': Bool, 'img_shape': [h, w], 'img_ratio:': [r_h, r_w])
             The infomations of images.
         threshold -> Float
@@ -126,11 +149,6 @@ def get_kps_from_heatmap(heatmap, stride, threshold=0.5, size=40):
             All keypoints in heatmap with [x, y, score].
     """
     keypoints = []
-
-    if stride != 1:
-        heatmap = F.interpolate(
-            heatmap, scale_factor=stride, mode='bicubic', align_corners=False)
-    heatmap = heatmap.numpy()
 
     batch, num_cls, h, w = heatmap.shape
 

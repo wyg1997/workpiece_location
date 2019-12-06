@@ -12,7 +12,7 @@ from utils.meters import AverageMeter
 from utils.cprint import cprint
 from solver.build import make_optimizer, make_lr_scheduler, make_loss_function
 from tools.visualize import visualize
-from tools.kps_tools import get_kps_from_heatmap, eval_key_points
+from tools.kps_tools import get_kps_from_heatmap, eval_key_points, resize_heatmaps
 from models.build import build_model
 from .tester import Tester
 
@@ -106,11 +106,12 @@ class Trainer:
 
             # precisions of results
             if isinstance(outputs, list):
-                results = outputs[-1].cpu().detach()
+                results = outputs[-1]
             else:
-                results = outputs.cpu().detach()
+                results = outputs
+            results = resize_heatmaps(results, self.cfg.MODEL.STRIDE)
+
             kps = get_kps_from_heatmap(results,
-                                       self.cfg.MODEL.STRIDE,
                                        threshold=0.5,
                                        size=self.cfg.TRAIN.SIZE)
             dis, p, r = eval_key_points(kps, data['anns'], size=40)
@@ -160,8 +161,8 @@ class Trainer:
 
             # see train data
             if self.cfg.VISDOM.SHOW_LABEL and i == 0:
-                vis_images = visualize(ori_imgs, ori_targets,
-                                       stride=self.cfg.MODEL.STRIDE,
+                targets = resize_heatmaps(targets, self.cfg.MODEL.STRIDE)
+                vis_images = visualize(ori_imgs.numpy(), targets,
                                        mean=self.cfg.TRAIN.MEAN,
                                        std=self.cfg.TRAIN.STD)
                 self.vis.images(vis_images, win='label',
@@ -169,8 +170,7 @@ class Trainer:
 
             # see train results
             if self.cfg.VISDOM.SHOW_TRAIN_OUT and i == 0:
-                vis_images = visualize(ori_imgs, results,
-                                       stride=self.cfg.MODEL.STRIDE,
+                vis_images = visualize(ori_imgs.numpy(), results,
                                        mean=self.cfg.TRAIN.MEAN,
                                        std=self.cfg.TRAIN.STD,
                                        alpha=0.5)

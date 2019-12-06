@@ -17,16 +17,15 @@ _color_map = [
     'Magma',
 ]
 
-def visualize(imgs, targets=None, stride=1,
+def visualize(imgs, targets=None,
               mean=[0, 0, 0], std=[1, 1, 1],
               alpha=0.5, threshold=0.3):
     """
     Show image and target.
 
     Input:
-        imgs: torch image with shape [n, c, h, w].
-        targets: heatmaps with images with shape [n, k, h, w],
-            k is the number of classes including background.
+        imgs: numpy image with shape [n, c, h, w].
+        targets: heatmaps with images with shape [n, k, h, w].
         mean: images mean.
         std: images std.
         alpha: heatmap weight.
@@ -35,19 +34,16 @@ def visualize(imgs, targets=None, stride=1,
     Output:
         show_imgs: The images will be showed with shape [n, c, h, w] with type `numpy`.
     """
-    assert imgs.shape[-2] == targets.shape[-2]*stride and \
-           imgs.shape[-1] == targets.shape[-1]*stride
+    assert isinstance(imgs, np.ndarray) and isinstance(targets, np.ndarray), \
+           f"imgs and targets must be np.ndarray, but get {type(imgs) and {type(targets)}}"
+
+    assert imgs.shape[-2] == targets.shape[-2] and \
+           imgs.shape[-1] == targets.shape[-1], \
+           f"imgs and targets must have same shape, but get {imgs.shape} and {targets.shape}"
 
     targets[targets<threshold] = 0
-
-    if stride != 1:
-        targets = F.interpolate(targets, scale_factor=stride, mode='bicubic', align_corners=False)
-        targets = targets.clamp(min=0.0, max=1.0)
+    targets = targets.clip(min=0.0, max=1.0)
     
-    # tensor to numpy
-    imgs = imgs.numpy()
-    targets = targets.numpy()
-
     num_images = imgs.shape[0]
 
     imgs = imgs.transpose(0, 2, 3, 1)
