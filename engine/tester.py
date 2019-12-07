@@ -3,6 +3,7 @@
 
 import torch
 import numpy as np
+from tqdm import tqdm
 
 from datasets.build import get_dataloader
 from tools.kps_tools import get_kps_from_heatmap, eval_key_points, resize_heatmaps
@@ -22,13 +23,17 @@ class Tester:
         self.test_cnt = 0
 
     def test(self, threshold=0.5, show=False):
+        self.test_cnt += 1
+
+        print()
         self.model.eval()
 
         eval_dis = AverageMeter()
         eval_p = AverageMeter()
         eval_r = AverageMeter()
 
-        for i, data in enumerate(self.test_dataloader):
+        for i, data in enumerate(tqdm(self.test_dataloader,
+                                      desc=f"Testing")):
             ori_imgs = data['imgs']
 
             imgs = ori_imgs.cuda()
@@ -58,12 +63,10 @@ class Tester:
             eval_p.update(p.avg, p.count)
             eval_r.update(r.avg, r.count)
 
-        self.test_cnt += 1
-
         self.logger.info(f"Eval result: "
                          f"dis_loss: {eval_dis.avg:.2f} | "
-                         f"precision: {eval_p.avg:.2%} | "
-                         f"recall: {eval_r.avg:.2%}")
+                         f"precision: {eval_p.sum:.0f}/{eval_p.count}={eval_p.avg:.2%} | "
+                         f"recall: {eval_r.sum:.0f}/{eval_r.count}={eval_r.avg:.2%}")
 
         # draw curve
         self.vis.line(Y=np.array([eval_dis.avg]),

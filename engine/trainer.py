@@ -31,6 +31,11 @@ class Trainer:
         # model
         # fcn
         self.model = build_model(cfg.MODEL.BACKBONE, self.num_cls, cfg.MODEL.PRETRAIN)
+        if self.cfg.MODEL.CHECKPOINT:
+            self.logger.info(f"load pretrain from `{self.cfg.MODEL.CHECKPOINT}`")
+            self.model.load_state_dict(torch.load(self.cfg.MODEL.CHECKPOINT)['checkpoint'])
+        else:
+            cprint(f"no weights loaded.")
 
         # Tester
         self.tester = Tester(cfg, logger, vis, work_dir, self.model, self.classes)
@@ -216,5 +221,6 @@ class Trainer:
         if not osp.exists(save_dir):
             os.makedirs(save_dir)
 
-        torch.save(self.model.state_dict(),
+        torch.save(dict(checkpoint=self.model.state_dict(),
+                        classes=self.classes),
                    osp.join(save_dir, str(self.current_epoch))+'.pth')

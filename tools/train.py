@@ -70,7 +70,7 @@ def main():
     cudnn.benchmark = True
     
     # visdom
-    vis = visdom.Visdom(port=cfg.VISDOM.PORT)
+    vis = visdom.Visdom(port=cfg.VISDOM.PORT, env='train')
     assert vis.check_connection(), \
            'visdom server has not lauched, please run `python -m visdom.server`'
     cprint(f"Visdom is running, you can visit it at `localhost:{cfg.VISDOM.PORT}`",

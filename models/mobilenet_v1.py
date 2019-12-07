@@ -148,7 +148,7 @@ class PoseEstimationWithMobileNet(nn.Module):
         return outputs
 
 def build_mobilenet_v1(pretrain, nparts):
-    model = PoseEstimationWithMobileNet(num_refinement_stages=1, num_channels=128, num_heatmaps=nparts)
+    model = PoseEstimationWithMobileNet(num_refinement_stages=2, num_channels=128, num_heatmaps=nparts)
 
     if pretrain:
         weights = torch.load('pretrain/mobilenet_v1.pth')

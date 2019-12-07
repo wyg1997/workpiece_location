@@ -23,8 +23,7 @@ _C.MODEL.DESCRIPTION = '*** Please type in model description ***'
 _C.MODEL.BACKBONE = 'resnet34'
 # pretrain
 _C.MODEL.PRETRAIN = True
-# TODO: load checkpoint and continue train
-_C.MODEL.RESUME = ''
+# load checkpoint
 _C.MODEL.CHECKPOINT = ''
 # detect size and direction
 # TODO: support detect size and direction
