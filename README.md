@@ -33,7 +33,18 @@ python tools/kps_marking_tool.py \
 
 ```sh
 python -m visdom.server -port 8887
-CUDA_VISIBLE_DEVICE=1 python tools/train.py --config_file example/baseline/v0/resnet34.yml VISDOM.PORT 8887
+CUDA_VISIBLE_DEVICE=1 python tools/train.py \
+        --config_file example/baseline/v0/mobilenet_v1.yml \
+        VISDOM.PORT 8887
+```
+
+#### 单独测试
+```sh
+python -m visdom.server -port 8887
+CUDA_VISIBLE_DEVICE=1 python tools/test.py \
+        --config_file example/baseline/v0/mobilenet_v1.yml \
+        --checkpoint example/baseline/v0/checkpoint/200.pth \
+        VISDOM.PORT 8887
 ```
 
 ### 说明

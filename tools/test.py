@@ -84,6 +84,7 @@ def main():
     print()
 
     cprint('start testing...')
+    cprint(f"load checkpoint at `{args.checkpoint}`", kind=1)
 
     # prepare testing parameters
     cpt = torch.load(args.checkpoint)
