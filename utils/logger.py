@@ -21,7 +21,7 @@ def setup_logger(name, save_dir):
 
     # file handler
     if save_dir is not None and save_dir != '':
-        fh = logging.FileHandler(osp.join(save_dir, 'log.txt'), mode='w')
+        fh = logging.FileHandler(osp.join(save_dir, name+'_log.txt'), mode='w')
         fh.setLevel(logging.DEBUG)
         fh.setFormatter(formatter)
         logger.addHandler(fh)
