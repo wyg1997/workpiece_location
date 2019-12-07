@@ -1,5 +1,6 @@
 data/
 example/
 pretrain/
+.vscode/
 **/.ipynb_checkpoints/
 **/__pycache__/
