@@ -17,7 +17,7 @@
 
 #### 设置参数
 
-参数文件的涵义见`configs/example_config.yml`。
+参数文件的涵义见[configs/config_example.yml](configs/config_example.yml)。
 
 #### 标注工具
 
