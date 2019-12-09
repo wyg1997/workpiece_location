@@ -88,7 +88,7 @@ class Trainer:
         print()
 
     def on_train_end(self):
-        self.save_checkpoints()
+        self.save_checkpoints(file_name='latest')
 
     def training_epoch(self):
         for i, data in enumerate(self.train_dataloader):
@@ -216,11 +216,15 @@ class Trainer:
 
         self.on_train_end()
 
-    def save_checkpoints(self):
+    def save_checkpoints(self, file_name=None):
         save_dir = osp.join(self.work_dir, 'checkpoints/')
         if not osp.exists(save_dir):
             os.makedirs(save_dir)
 
+        if file_name is not None:
+            file_name = file_name + '.pth'
+        else:
+            file_name = str(self.current_epoch) + '.pth'
         torch.save(dict(checkpoint=self.model.state_dict(),
                         classes=self.classes),
-                   osp.join(save_dir, str(self.current_epoch))+'.pth')
+                   osp.join(save_dir, file_name))
