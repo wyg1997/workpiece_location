@@ -20,7 +20,7 @@ _C.MODEL.NAME = 'baseline'
 _C.MODEL.VERSION = 'v0'
 _C.MODEL.DESCRIPTION = '*** Please type in model description ***'
 # backbone
-_C.MODEL.BACKBONE = 'resnet34'
+_C.MODEL.BACKBONE = 'mobilenet_v1'
 # pretrain
 _C.MODEL.PRETRAIN = True
 # load checkpoint

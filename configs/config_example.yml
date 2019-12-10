@@ -6,7 +6,7 @@ MODEL:
     DESCRIPTION: 'Resnet34 model with MSELoss'  # 模型描述
     CLASSES: []  # 可以指定类别顺序，如果为空则自动在数据集中检索
     STRIDE: 4  # 模型输出与输入的尺寸步长，如输入为64*64，步长为4，则输出为16*16
-    BACKBONE: 'resnet34'  # 选择backbone
+    BACKBONE: 'mobilenet_v1'  # 选择backbone
     PRETRAIN: True  # 是否使用pretrain模型
 
 
