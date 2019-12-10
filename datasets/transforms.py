@@ -66,6 +66,10 @@ class Pipline:
         ann = sample['ann']
 
         img_size = img.shape[:2]
+        # remove points which out of image
+        if 'scale_factor' in trans_info \
+                and trans_info['scale_factor'] > 1.0:
+            ann = self.remove_out_points(ann, img_size)
 
         # to float
         img = img.astype(np.float32) / 255.0
@@ -89,6 +93,17 @@ class Pipline:
                     targets=target,
                     trans_infos=trans_info,
                     anns=ann)
+
+    def remove_out_points(self, ann, img_size):
+        idx = np.where((ann['locations'].data[:, 1]<=img_size[0]-1)& \
+                       (ann['locations'].data[:,0]<=img_size[1]))
+
+        ann['locations'].data = ann['locations'].data[idx]
+        ann['sizes'].data = ann['sizes'].data[idx]
+        ann['directions'].data = ann['directions'].data[idx]
+        ann['labels'].data = ann['labels'].data[idx]
+        return ann
+
 
     def get_gussian_target(self, center, size, stride, sigma):
         """
@@ -297,8 +312,8 @@ class Scale:
             cprint(f"The length of scale_range is must be 2, but get {len(scale_range)}",
                    level='error')
             raise ValueError(f"scale_range value error")
-        elif not all(0.1 <= x <= 1.0 for x in scale_range):
-            cprint(f"scale_range must be in range [0.1, 1.0], but get {scale_range}",
+        elif not all(0.1 <= x <= 2.0 for x in scale_range):
+            cprint(f"scale_range must be in range [0.1, 2.0], but get {scale_range}",
                    level='error')
             raise ValueError(f"scale_range value error")
 
@@ -316,7 +331,6 @@ class Scale:
 
         # save infos
         trans_info['scale_factor'] = scale_factor
-        trans_info['scale_shift'] = shift
 
         return dict(img=img, ann=ann)
 
@@ -326,14 +340,21 @@ class Scale:
 
         img = cv2.resize(img, (new_w, new_h))
 
-        top_pad = (h-new_h) // 2
-        left_pad = (w-new_w) // 2
-        bottom_pad = h - new_h - top_pad
-        right_pad = w - new_w - left_pad
+        if factor <= 1.0:
+            top_pad = (h-new_h) // 2
+            left_pad = (w-new_w) // 2
+            bottom_pad = h - new_h - top_pad
+            right_pad = w - new_w - left_pad
 
-        img = cv2.copyMakeBorder(img, top_pad, bottom_pad, left_pad, right_pad,
-                                 cv2.BORDER_CONSTANT, None, self.pad_color)
-        return img, (left_pad, top_pad)
+            img = cv2.copyMakeBorder(img, top_pad, bottom_pad, left_pad, right_pad,
+                                     cv2.BORDER_CONSTANT, None, self.pad_color)
+            return img, (left_pad, top_pad)
+        else:
+            shift_x = (new_w - w) // 2
+            shift_y = (new_h - h) // 2
+
+            img = img[shift_y: shift_y+h, shift_x: shift_x+w, :]
+            return img, (shift_x, shift_y)
 
     def _scale_ann(self, ann, factor, shift):
         """
@@ -344,10 +365,16 @@ class Scale:
         """
         shift_x, shift_y = shift
 
-        ann['locations'].data = \
-            ann['locations'].data.astype(np.float) * factor + [shift_x, shift_y]
-        ann['sizes'].data = ann['sizes'].data.astype(np.float) * factor
-        return ann
+        if factor <= 1.0:
+            ann['locations'].data = \
+                ann['locations'].data.astype(np.float) * factor + [shift_x, shift_y]
+            ann['sizes'].data = ann['sizes'].data.astype(np.float) * factor
+            return ann
+        else:
+            ann['locations'].data = \
+                ann['locations'].data.astype(np.float) * factor - [shift_x, shift_y]
+            ann['sizes'].data = ann['sizes'].data.astype(np.float) * factor
+            return ann
 
 
 class Rotate:
@@ -401,7 +428,7 @@ class Rotate:
         center = (w/2, h/2)
         M = cv2.getRotationMatrix2D(center, rotate_angle, scale=1.0)
         return M
-        
+
     def _rotate_img(self, img, M):
         # warpAffine(src, M, dsize[, dst[, flags[, borderMode[, borderValue]]]])
         # dsize is [w, h]
@@ -410,8 +437,10 @@ class Rotate:
         return img
 
     def _rotate_ann(self, ann, M):
-        ann['locations'].data = np.insert(ann['locations'].data, 2, 1, axis=1).T # shape [3, n]
-        ann['locations'].data = np.matmul(M, ann['locations'].data).T # [2, 3] * [3, n]
+        ann['locations'].data = np.insert(
+            ann['locations'].data, 2, 1, axis=1).T  # shape [3, n]
+        ann['locations'].data = np.matmul(
+            M, ann['locations'].data).T  # [2, 3] * [3, n]
         # TODO: rotate directions
         return ann
 
@@ -426,6 +455,7 @@ class Albu:
     Output:
         sample: Result dict.
     """
+
     def __init__(self, brightness=0, contrast=0, saturation=0, hue=0):
         self.to_tensor = ToPILImage()
         self.albu = ColorJitter(brightness=brightness,
