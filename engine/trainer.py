@@ -9,10 +9,11 @@ import torch
 import numpy as np
 
 from datasets.build import get_dataloader
+from datasets.transforms import resume_imgs
 from utils.meters import AverageMeter
 from utils.cprint import cprint
 from solver.build import make_optimizer, make_lr_scheduler, make_loss_function
-from tools.visualize import visualize
+from tools.visualize import vis_heatmaps
 from tools.kps_tools import get_kps_from_heatmap, eval_key_points, resize_heatmaps
 from models.build import build_model
 from .tester import Tester
@@ -173,20 +174,19 @@ class Trainer:
                           opts=dict(title='train_dis_loss'))
 
             # see train data
+            if i == 0:
+                ori_imgs = resume_imgs(ori_imgs,
+                                       self.cfg.TRAIN.MEAN,
+                                       self.cfg.TRAIN.STD)
             if self.cfg.VISDOM.SHOW_LABEL and i == 0:
                 targets = resize_heatmaps(targets, self.cfg.MODEL.STRIDE)
-                vis_images = visualize(ori_imgs.numpy(), targets,
-                                       mean=self.cfg.TRAIN.MEAN,
-                                       std=self.cfg.TRAIN.STD)
+                vis_images = vis_heatmaps(ori_imgs, targets, alpha=0.5)
                 self.vis.images(vis_images, win='label',
                                 opts=dict(title='label'))
 
             # see train results
             if self.cfg.VISDOM.SHOW_TRAIN_OUT and i == 0:
-                vis_images = visualize(ori_imgs.numpy(), results,
-                                       mean=self.cfg.TRAIN.MEAN,
-                                       std=self.cfg.TRAIN.STD,
-                                       alpha=0.5)
+                vis_images = vis_heatmaps(ori_imgs, results, alpha=0.5)
                 self.vis.images(vis_images, win='train_results',
                                 opts=dict(title='train_results'))
 

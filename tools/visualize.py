@@ -10,7 +10,11 @@ import cv2
 from utils.cprint import cprint
 
 
-def visualize(imgs, targets=None,
+def vis_resuls(imgs, results):
+    pass
+
+
+def vis_heatmaps(imgs, targets=None,
               mean=[0, 0, 0], std=[1, 1, 1],
               alpha=0.5, threshold=0.3):
     """
@@ -39,9 +43,7 @@ def visualize(imgs, targets=None,
     
     num_images = imgs.shape[0]
 
-    imgs = imgs.transpose(0, 2, 3, 1)
-    imgs = (imgs*std + mean)*255
-    imgs = imgs.astype(np.uint8)
+    imgs = imgs.transpose(0, 2, 3, 1) # to [n, h, w, c]
 
     targets = targets.max(axis=1) # shape [n, h, w]
     targets = targets*255
@@ -61,6 +63,6 @@ if __name__ == '__main__':
     imgs = torch.load('temp/imgs.pth')
     targets = torch.load('temp/targets.pth')
 
-    imgs = visualize(imgs, targets, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    imgs = vis_heatmaps(imgs, targets, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     vis.images(imgs)
 

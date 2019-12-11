@@ -28,7 +28,7 @@ class ImageDataset:
                 'locations': <np.ndarray> (n, 2),
                 'labels': <np.ndarray> (n, ),
                 'sizes': <np.ndarray> (n, )
-                'directions': <np.ndarray> (n, )
+                'angle': <np.ndarray> (n, )
             }
         },
         ...
@@ -94,7 +94,7 @@ class ImageDataset:
         locations = []
         labels = []
         sizes = []
-        directions = []
+        angles = []
 
         # size
         size = root.find('size')
@@ -118,29 +118,29 @@ class ImageDataset:
             ]
 
             r = int(float(point.find('size').text))
-            direction = float(point.find('direction').text)
+            angle = float(point.find('angle').text)
 
             locations.append(location)
             labels.append(label)
             sizes.append(r)
-            directions.append(direction)
+            angles.append(angle)
 
         if not locations:
             locations = np.zeros((0, 2))
             labels = np.zeros((0, ))
             sizes = np.zeros((0, ))
-            directions = np.zeros((0, ))
+            angles = np.zeros((0, ))
         else:
             locations = np.array(locations, ndmin=2) - 1
             labels = np.array(labels)
             sizes = np.array(sizes)
-            directions = np.array(directions)
+            angles = np.array(angles)
 
         ann = dict(
             locations = DataContainer(locations.astype(np.int)),
             labels = DataContainer(labels.astype(np.int)),
             sizes = DataContainer(sizes.astype(np.int)),
-            directions = DataContainer(directions.astype(np.float))
+            angles = DataContainer(angles.astype(np.float))
         )
         return dict(width=width, height=height, ann=ann)
 

@@ -6,10 +6,11 @@ import numpy as np
 from tqdm import tqdm
 
 from datasets.build import get_dataloader
+from datasets.transforms import resume_imgs
 from tools.kps_tools import get_kps_from_heatmap, eval_key_points, resize_heatmaps
 from utils.meters import AverageMeter
 from utils.cprint import cprint
-from tools.visualize import visualize
+from tools.visualize import vis_heatmaps
 
 
 class Tester:
@@ -47,9 +48,10 @@ class Tester:
 
             # vis results
             if show:
-                vis_img = visualize(ori_imgs.numpy(), results,
-                                    mean=self.cfg.TEST.MEAN,
-                                    std=self.cfg.TEST.STD)
+                ori_imgs = resume_imgs(ori_imgs,
+                                       self.cfg.TEST.MEAN,
+                                       self.cfg.TEST.STD)
+                vis_img = vis_heatmaps(ori_imgs, results, alpha=0.5)
                 self.vis.images(vis_img, win=f"test_results[{i}]",
                                 opts=dict(title=f"test_results[{i}]"))
 

@@ -25,10 +25,10 @@ _C.MODEL.BACKBONE = 'mobilenet_v1'
 _C.MODEL.PRETRAIN = True
 # load checkpoint
 _C.MODEL.CHECKPOINT = ''
-# detect size and direction
-# TODO: support detect size and direction
+# detect size and angle
+# TODO: support detect size and angle
 _C.MODEL.SIZE = False
-_C.MODEL.DIRECTION = False
+_C.MODEL.ANGLE = False
 # classes
 _C.MODEL.CLASSES = []
 # model stride

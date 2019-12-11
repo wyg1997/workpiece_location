@@ -64,8 +64,8 @@ def write2xml(labels, root_path, idx, img_type):
         # size
         s = ET.SubElement(obj, 'size')
         s.text = '40'
-        # direction
-        d = ET.SubElement(obj, 'direction')
+        # angle
+        d = ET.SubElement(obj, 'angle')
         d.text = '0'
 
     # make file more beautiful

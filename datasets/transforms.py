@@ -11,6 +11,26 @@ import numpy as np
 from utils.cprint import cprint
 
 
+def resume_imgs(imgs, mean, std):
+    """
+    Resume images from tensor to numpy.
+
+    Inputs:
+        imgs: Tensor in range(0.0, 1.0) with shape [n, c, h, w].
+        mean: Mean of images with [R, G, B].
+        std: Std of images with [R, G, B].
+
+    Outputs:
+        imgs: Numpy in range(0, 255) with shape [n, c, h, w].
+    """
+    imgs = imgs.numpy()
+    imgs = imgs.transpose(0, 2, 3, 1) # to [n, h, w, c]
+    imgs = (imgs*std + mean)*255
+    imgs = imgs.transpose(0, 3, 1, 2) # to [n, c, h, w]
+    imgs = imgs.astype(np.uint8)
+    return imgs
+
+
 def build_transforms(cfg, is_train):
     if is_train:
         config = cfg.TRAIN
@@ -100,7 +120,7 @@ class Pipline:
 
         ann['locations'].data = ann['locations'].data[idx]
         ann['sizes'].data = ann['sizes'].data[idx]
-        ann['directions'].data = ann['directions'].data[idx]
+        ann['angles'].data = ann['angles'].data[idx]
         ann['labels'].data = ann['labels'].data[idx]
         return ann
 
@@ -248,7 +268,7 @@ class Resize:
 
 class Flip:
     """
-    Flip images and annotations(including location and direction).
+    Flip images and annotations(including location and angle).
 
     Param:
         prob: The probability 
@@ -283,7 +303,7 @@ class Flip:
     def _flip_ann(self, ann, size):
         _, w = size
         ann['locations'].data[:, 0] = -ann['locations'].data[:, 0] + w
-        # TODO: support flip directions
+        # TODO: support flip angles
         return ann
 
 
@@ -379,7 +399,7 @@ class Scale:
 
 class Rotate:
     """
-    Rotate images and annotations(including location and direction)
+    Rotate images and annotations(including location and angle)
 
     Param:
         rotate_range: The rotate range with List [start, end].
@@ -441,7 +461,7 @@ class Rotate:
             ann['locations'].data, 2, 1, axis=1).T  # shape [3, n]
         ann['locations'].data = np.matmul(
             M, ann['locations'].data).T  # [2, 3] * [3, n]
-        # TODO: rotate directions
+        # TODO: rotate angles
         return ann
 
 
