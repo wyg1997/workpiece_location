@@ -1,7 +1,8 @@
-visdom==0.1.8.9
-torch==1.3.0
-yacs==0.1.6
+seaborn==0.9.0
 numpy==1.17.3
-opencv_python==4.1.1.26
+visdom==0.1.8.9
 torchvision==0.4.1
 tqdm==4.38.0
+torch==1.3.0
+opencv_python==4.1.1.26
+yacs==0.1.6
