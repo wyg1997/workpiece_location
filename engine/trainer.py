@@ -134,13 +134,14 @@ class Trainer:
                 location_loss += self.criterion(outputs['locations'][out_idx],
                                                 targets['locations'])
             # angle
+            angle_weight = 0.1
             angle_loss = self.criterion(outputs['angles'][0],
                                         targets['angles'],
-                                        ignore=-1) * 0.1
+                                        ignore=-1) * angle_weight
             for out_idx in range(1, len(outputs['angles'])):
                 angle_loss += self.criterion(outputs['angles'][out_idx],
                                              targets['angles'],
-                                             ignore=-1) * 0.1
+                                             ignore=-1) * angle_weight
 
             loss = location_loss + angle_loss
 

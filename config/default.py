@@ -26,9 +26,9 @@ _C.MODEL.PRETRAIN = True
 # load checkpoint
 _C.MODEL.CHECKPOINT = ''
 # detect size and angle
-# TODO: support detect size and angle
-_C.MODEL.SIZE = False
 _C.MODEL.ANGLE = False
+# TODO: support detect size
+_C.MODEL.SIZE = False
 # classes
 _C.MODEL.CLASSES = []
 # model stride

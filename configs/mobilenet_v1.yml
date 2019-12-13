@@ -6,6 +6,8 @@ MODEL:
     STRIDE: 8
     BACKBONE: 'mobilenet_v1'
     PRETRAIN: True
+    ANGLE: True
+    SIZE: False
 
 
 TRAIN:
