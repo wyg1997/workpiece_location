@@ -2,6 +2,7 @@
 # coding=utf-8
 
 import random
+import math
 
 import torchvision.transforms as T
 from torchvision.transforms import ColorJitter, ToPILImage
@@ -21,12 +22,11 @@ def resume_imgs(imgs, mean, std):
         std: Std of images with [R, G, B].
 
     Outputs:
-        imgs: Numpy in range(0, 255) with shape [n, c, h, w].
+        imgs: Numpy in range(0, 255) with shape [n, h, w, c].
     """
     imgs = imgs.numpy()
     imgs = imgs.transpose(0, 2, 3, 1) # to [n, h, w, c]
     imgs = (imgs*std + mean)*255
-    imgs = imgs.transpose(0, 3, 1, 2) # to [n, c, h, w]
     imgs = imgs.astype(np.uint8)
     return imgs
 
@@ -37,7 +37,7 @@ def build_transforms(cfg, is_train):
     else:
         config = cfg.TEST
 
-    return Pipline(config, cfg.MODEL.STRIDE, is_train)
+    return Pipline(config, cfg.MODEL, is_train)
 
 
 class Pipline:
@@ -45,9 +45,11 @@ class Pipline:
     Process images and annotations before training or testing.
     """
 
-    def __init__(self, cfg, stride, is_train):
+    def __init__(self, cfg, model_cfg, is_train):
         self.cfg = cfg
-        self.stride = stride
+        self.stride = model_cfg.STRIDE
+        self.train_size = model_cfg.SIZE
+        self.train_angle = model_cfg.ANGLE
         self.is_train = is_train
 
         # include [Resize, Flip, Lighting, Normalize]
@@ -99,9 +101,11 @@ class Pipline:
 
         img = img.transpose((2, 0, 1)).astype(np.float32)
 
+        targets = {}
+        # heatmaps [n, k, h, w]
         scale_factor = 1 if 'scale_factor' not in trans_info \
             else trans_info['scale_factor']
-        target = self.get_gussian_targets(
+        targets['locations'] = self.get_gussian_targets(
             ann,
             img_size,
             self.stride,
@@ -109,8 +113,17 @@ class Pipline:
             num_cls
         ) if self.is_train else []
 
+        # angle maps [n, 2, h, w] (channel=2 means sin and cos value)
+        if self.is_train and self.train_angle:
+            targets['angles'] = self.get_angle_targets(
+                ann,
+                img_size,
+                self.stride,
+                self.cfg.SIGMA * scale_factor,
+            )
+
         return dict(imgs=img,
-                    targets=target,
+                    targets=targets,
                     trans_infos=trans_info,
                     anns=ann)
 
@@ -123,6 +136,54 @@ class Pipline:
         ann['angles'].data = ann['angles'].data[idx]
         ann['labels'].data = ann['labels'].data[idx]
         return ann
+
+
+    def get_angle_target(self, center, angle, size, stride, sigma):
+        """
+        根据一个中心点和一个角度，生成角度图。
+        """
+        H, W = size
+        map_h = H // stride
+        map_w = W // stride
+
+        start = stride / 2.0 - 0.5
+        y_range = range(map_h)
+        x_range = range(map_w)
+        xx, yy = np.meshgrid(x_range, y_range)
+        xx = xx*stride + start
+        yy = yy*stride + start
+
+        d2 = (xx-center[0])**2 + (yy-center[1])**2
+        exponent = d2 / 2.0 / sigma / sigma
+        exponent = np.exp(-exponent)
+
+        angle_map = np.zeros((map_h, map_w, 2)) - 1  # [h, w, 2]
+        values = [math.sin(angle/180*math.pi), math.cos(angle/180*math.pi)]
+        angle_map[exponent>0.01] = values
+        angle_map = angle_map.transpose(2, 0, 1)  # [2, h, w]
+        return angle_map
+
+
+    def get_angle_targets(self, ann, size, stride, sigma):
+        """
+        根据中心点生成角度地图，-1表示忽略的点。
+
+        Outputs:
+            angle_maps: shape [n, 2, h, w].
+        """
+        H, W = size
+        points = ann['locations'].data
+        angles = ann['angles'].data
+        num_points = points.shape[0]
+
+        angle_maps = np.zeros((2, H//stride, W//stride)).astype(np.float32) - 1
+
+        for i in range(num_points):
+            angle = angles[i]
+            angle_map = self.get_angle_target(points[i], angle, size, stride, sigma)
+            angle_maps = np.maximum(angle_maps, angle_map)
+
+        return angle_maps
 
 
     def get_gussian_target(self, center, size, stride, sigma):
@@ -303,7 +364,9 @@ class Flip:
     def _flip_ann(self, ann, size):
         _, w = size
         ann['locations'].data[:, 0] = -ann['locations'].data[:, 0] + w
-        # TODO: support flip angles
+
+        ann['angles'].data = np.remainder(-ann['angles'].data + 180, 360)
+
         return ann
 
 
@@ -439,7 +502,7 @@ class Rotate:
         M = self._get_affine_matrix(img.shape[:2], rotate_angle)
 
         img = self._rotate_img(img, M)
-        ann = self._rotate_ann(ann, M)
+        ann = self._rotate_ann(ann, M, rotate_angle)
 
         return dict(img=img, ann=ann)
 
@@ -456,12 +519,13 @@ class Rotate:
                              borderValue=self.pad_color)
         return img
 
-    def _rotate_ann(self, ann, M):
-        ann['locations'].data = np.insert(
-            ann['locations'].data, 2, 1, axis=1).T  # shape [3, n]
-        ann['locations'].data = np.matmul(
-            M, ann['locations'].data).T  # [2, 3] * [3, n]
-        # TODO: rotate angles
+    def _rotate_ann(self, ann, M, rotate_angle):
+        ann['locations'].data = \
+            np.insert(ann['locations'].data, 2, 1, axis=1).T  # shape [3, n]
+        ann['locations'].data = \
+            np.matmul(M, ann['locations'].data).T  # [2, 3] * [3, n]
+
+        ann['angles'].data = np.remainder(ann['angles'].data + rotate_angle, 360)
         return ann
 
 

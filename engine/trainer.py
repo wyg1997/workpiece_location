@@ -13,7 +13,7 @@ from datasets.transforms import resume_imgs
 from utils.meters import AverageMeter
 from utils.cprint import cprint
 from solver.build import make_optimizer, make_lr_scheduler, make_loss_function
-from tools.visualize import vis_heatmaps
+from tools.visualize import vis_heatmaps, vis_anns, vis_results
 from tools.kps_tools import get_kps_from_heatmap, eval_key_points, resize_heatmaps
 from models.build import build_model
 from .tester import Tester
@@ -30,8 +30,14 @@ class Trainer:
         self.logger.info(f"classes: {self.classes}")
 
         # model
+        # task
+        self.task = ['locations']
+        if self.cfg.MODEL.ANGLE:
+            self.task.append('angles')
+        if self.cfg.MODEL.SIZE:
+            self.task.append('sizes')
         # fcn
-        self.model = build_model(cfg.MODEL.BACKBONE, self.num_cls, cfg.MODEL.PRETRAIN)
+        self.model = build_model(cfg.MODEL, self.num_cls)
         if self.cfg.MODEL.CHECKPOINT:
             self.logger.info(f"load pretrain from `{self.cfg.MODEL.CHECKPOINT}`")
             self.model.load_state_dict(torch.load(self.cfg.MODEL.CHECKPOINT)['checkpoint'])
@@ -92,24 +98,51 @@ class Trainer:
         self.save_checkpoints(file_name='latest')
 
     def training_epoch(self):
+        """
+        Train an epoch. Forward and backward in each iter.
+
+        It will do
+            1. Load datas and forward.
+            2. Calculate loss and backward.
+            3. Collate and calculate results(locations and angles).
+            4. Eval results and get dis_error, precision, recall and angle_error.
+            5. Print to logger.
+            6. Show results to visdom.
+        in each iter.
+        """
         for i, data in enumerate(self.train_dataloader):
             start_time = time.time()
+            # 1. Load datas and forward.
             ori_imgs = data['imgs']
             ori_targets = data['targets']
 
+            # move to gpu
             imgs = ori_imgs.cuda()
-            targets = ori_targets.cuda()
+            targets = {}
+            for key in self.task:
+                targets[key] = ori_targets[key].cuda()
 
             self.optimizer.zero_grad()
             outputs = self.model(imgs)
 
+            # 2. Calculate loss and backward.
             # get loss
-            if isinstance(outputs, list):
-                loss = self.criterion(outputs[0], targets)
-                for out_idx in range(1, len(outputs)):
-                    loss += self.criterion(outputs[out_idx], targets)
-            else:
-                loss = self.criterion(outputs, targets)
+            # location
+            location_loss = self.criterion(outputs['locations'][0],
+                                           targets['locations'])
+            for out_idx in range(1, len(outputs['locations'])):
+                location_loss += self.criterion(outputs['locations'][out_idx],
+                                                targets['locations'])
+            # angle
+            angle_loss = self.criterion(outputs['angles'][0],
+                                        targets['angles'],
+                                        ignore=-1) * 0.1
+            for out_idx in range(1, len(outputs['angles'])):
+                angle_loss += self.criterion(outputs['angles'][out_idx],
+                                             targets['angles'],
+                                             ignore=-1) * 0.1
+
+            loss = location_loss + angle_loss
 
             # backward step
             loss.backward()
@@ -118,37 +151,47 @@ class Trainer:
             # cost time
             cost_time = time.time() - start_time
 
+            # 3. Collate and calculate results(locations and angles).
             # precisions of results
-            if isinstance(outputs, list):
-                results = outputs[-1]
-            else:
-                results = outputs
-            results = resize_heatmaps(results, self.cfg.MODEL.STRIDE)
+            results = {}
+            for key in self.task:
+                results[key] = resize_heatmaps(outputs[key][-1], self.cfg.MODEL.STRIDE)
 
             kps = get_kps_from_heatmap(results,
                                        threshold=0.5,
                                        size=self.cfg.TRAIN.SIZE)
-            dis, p, r = eval_key_points(kps, data['anns'], size=40)
-            dis, p, r = dis.avg, p.avg, r.avg
+
+            # 4. Eval results and get dis_error, precision, recall and angle_error.
+            eval_res = eval_key_points(kps, data['anns'], size=40)
+            dis = eval_res['dis']
+            p = eval_res['precision']
+            r = eval_res['recall']
+            if 'angles' in self.task:
+                angle_error = eval_res['angle_dis']
 
             loss = loss.item()
             current_lr = self.optimizer.param_groups[0]['lr']
 
+            # 5. Print to logger.
             # write log
             if i % self.cfg.SOLVER.LOG_INTERVAL == 0:
-                self.logger.info(f"Epoch: {self.current_epoch} | "
-                                 f"Iter: {i+1}/{len(self.train_dataloader)} | "
-                                 f"lr: {current_lr:.2e} | "
-                                 f"loss: {loss:.4f} | "
-                                 f"dis_loss: {dis:.2f} | "
-                                 f"precision: {p:.2%} | "
-                                 f"recall: {r:.2%} | "
-                                 f"time: {cost_time*1000:.0f}ms")
+                self.logger.info(
+                    f"Epoch: {self.current_epoch} | "
+                    f"Iter: {i+1}/{len(self.train_dataloader)} | "
+                    f"lr: {current_lr:.2e} | "
+                    f"location_loss: {location_loss:.4f} | "
+                    f"angle_loss: {angle_loss:.4f} | "
+                    f"dis_offset: {dis.avg:.2f} | "
+                    f"angle_error: {-1 if 'angles' not in self.task else angle_error.avg:.4f} | "
+                    f"precision: {p.avg:.2%} | "
+                    f"recall: {r.avg:.2%} | "
+                    f"time: {cost_time*1000:.0f}ms")
 
             # update iter
             self.running_loss.update(loss)
             self.global_step += 1
 
+            # 6. Show results to visdom.
             # show results and labels
             self.vis.text(f"{kps}", win='results')
             self.vis.text(f"{data['anns']}", win='anns')
@@ -167,40 +210,43 @@ class Trainer:
                           opts=dict(title='train_lr'))
 
             # dis line
-            self.vis.line(Y=np.array([dis]),
+            self.vis.line(Y=np.array([dis.avg]),
                           X=np.array([self.global_step]),
                           win='dis_loss',
                           update=None if self.global_step == 1 else 'append',
                           opts=dict(title='train_dis_loss'))
 
-            # see train data
+            # resume origin images
             if i == 0:
                 ori_imgs = resume_imgs(ori_imgs,
                                        self.cfg.TRAIN.MEAN,
                                        self.cfg.TRAIN.STD)
+
+            # see labels
+            if i == 0:
+                label_img = vis_anns(np.copy(ori_imgs), data['anns'])
+                self.vis.images(label_img, win='label_image',
+                                opts=dict(title='label_image'))
+
+            # see all results(location and angle)
+            if i == 0:
+                res_img = vis_results(np.copy(ori_imgs), kps)
+                self.vis.images(res_img, win='result_image',
+                                opts=dict(title='result_image'))
+
+            # see label heatmaps
             if self.cfg.VISDOM.SHOW_LABEL and i == 0:
-                targets = resize_heatmaps(targets, self.cfg.MODEL.STRIDE)
-                vis_images = vis_heatmaps(ori_imgs, targets, alpha=0.5)
+                targets = resize_heatmaps(targets['locations'], self.cfg.MODEL.STRIDE)
+                vis_images = vis_heatmaps(np.copy(ori_imgs), targets, alpha=0.5)
                 self.vis.images(vis_images, win='label',
                                 opts=dict(title='label'))
 
-            # see train results
+            # see train heatmap results
             if self.cfg.VISDOM.SHOW_TRAIN_OUT and i == 0:
-                vis_images = vis_heatmaps(ori_imgs, results, alpha=0.5)
-                self.vis.images(vis_images, win='train_results',
-                                opts=dict(title='train_results'))
+                vis_images = vis_heatmaps(np.copy(ori_imgs), results['locations'], alpha=0.5)
+                self.vis.images(vis_images, win='train_heatmap',
+                                opts=dict(title='train_heatmap'))
 
-            # # see 2D heatmap
-            # if i == 0:
-            #     for cls_idx in range(self.num_cls):
-            #         self.vis.surf(results[0][cls_idx],
-            #                       win=f"heatmap_cls_{cls_idx}",
-            #                       opts=dict(title=f"heatmap_cls_{cls_idx}"))
-            #     for cls_idx in range(self.num_cls):
-            #         self.vis.surf(ori_targets[0][cls_idx],
-            #                       win=f"target_heatmap_cls_{cls_idx}",
-            #                       opts=dict(title=f"target_heatmap_cls_{cls_idx}"))
-            #     # input('press enter to continue...')
 
     def train(self):
         self.on_train_begin()

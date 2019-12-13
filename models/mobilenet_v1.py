@@ -55,7 +55,7 @@ class Cpm(nn.Module):
 
 
 class InitialStage(nn.Module):
-    def __init__(self, num_channels, num_heatmaps):
+    def __init__(self, num_channels, num_heatmaps, train_angle, train_size):
         super().__init__()
         self.trunk = nn.Sequential(
             conv(num_channels, num_channels, bn=False),
@@ -66,11 +66,22 @@ class InitialStage(nn.Module):
             conv(num_channels, 512, kernel_size=1, padding=0, bn=False),
             conv(512, num_heatmaps, kernel_size=1, padding=0, bn=False, relu=False)
         )
+        self.angle_maps = nn.Sequential(
+            conv(num_channels, 512, kernel_size=1, padding=0, bn=False),
+            conv(512, 2, kernel_size=1, padding=0, bn=False, relu=False)
+        ) if train_angle else None
 
     def forward(self, x):
         trunk_features = self.trunk(x)
-        heatmaps = self.heatmaps(trunk_features)
-        return heatmaps
+
+        outputs = {}
+        # location
+        outputs['locations'] = self.heatmaps(trunk_features)
+        # angle
+        if self.angle_maps is not None:
+            outputs['angles'] = self.angle_maps(trunk_features)
+
+        return outputs
 
 
 class RefinementStageBlock(nn.Module):
@@ -89,7 +100,7 @@ class RefinementStageBlock(nn.Module):
 
 
 class RefinementStage(nn.Module):
-    def __init__(self, in_channels, out_channels, num_heatmaps):
+    def __init__(self, in_channels, out_channels, num_heatmaps, train_angle, train_size):
         super().__init__()
         self.trunk = nn.Sequential(
             RefinementStageBlock(in_channels, out_channels),
@@ -102,16 +113,28 @@ class RefinementStage(nn.Module):
             conv(out_channels, out_channels, kernel_size=1, padding=0, bn=False),
             conv(out_channels, num_heatmaps, kernel_size=1, padding=0, bn=False, relu=False)
         )
+        self.angle_maps = nn.Sequential(
+            conv(out_channels, out_channels, kernel_size=1, padding=0, bn=False),
+            conv(out_channels, 2, kernel_size=1, padding=0, bn=False, relu=False)
+        ) if train_angle else None
 
     def forward(self, x):
         trunk_features = self.trunk(x)
-        heatmaps = self.heatmaps(trunk_features)
-        return heatmaps
+
+        outputs = {}
+        # location
+        outputs['locations'] = self.heatmaps(trunk_features)
+        # angle
+        if self.angle_maps is not None:
+            outputs['angles'] = self.angle_maps(trunk_features)
+        return outputs
 
 
 class PoseEstimationWithMobileNet(nn.Module):
-    def __init__(self, num_refinement_stages=1, num_channels=128, num_heatmaps=19):
+    def __init__(self, model_cfg, num_refinement_stages=1, num_channels=128, num_heatmaps=19):
         super().__init__()
+        self.model_cfg = model_cfg
+
         self.model = nn.Sequential(
             conv(     3,  32, stride=2, bias=False),
             conv_dw( 32,  64),
@@ -128,27 +151,61 @@ class PoseEstimationWithMobileNet(nn.Module):
         )
         self.cpm = Cpm(512, num_channels)
 
-        self.initial_stage = InitialStage(num_channels, num_heatmaps)
+        self.initial_stage = InitialStage(num_channels,
+                                          num_heatmaps,
+                                          self.model_cfg.ANGLE,
+                                          self.model_cfg.SIZE)
         self.refinement_stages = nn.ModuleList()
+
+        # calculate channels
+        refine_channels = num_channels + num_heatmaps
+        if self.model_cfg.ANGLE:
+            refine_channels += 2
+        if self.model_cfg.SIZE:
+            refine_channels += 1
+
         for idx in range(num_refinement_stages):
-            self.refinement_stages.append(RefinementStage(num_channels + num_heatmaps, num_channels,
-                                                          num_heatmaps))
+            self.refinement_stages.append(RefinementStage(refine_channels,
+                                                          num_channels,
+                                                          num_heatmaps,
+                                                          self.model_cfg.ANGLE,
+                                                          self.model_cfg.SIZE))
 
     def forward(self, x):
         backbone_features = self.model(x)
         backbone_features = self.cpm(backbone_features)
 
-        outputs = []
-        outputs.append(self.initial_stage(backbone_features))
+        outputs = {'locations': []}
+        if self.model_cfg.ANGLE:
+            outputs['angles'] = []
+        if self.model_cfg.SIZE:
+            outputs['sizes'] = []
 
+        # initial stage
+        initial_stage_outputs = self.initial_stage(backbone_features)
+        for key in outputs.keys():
+            outputs[key].append(initial_stage_outputs[key])
+
+        # refinement stage
         for refinement_stage in self.refinement_stages:
-            outputs.append(
-                refinement_stage(torch.cat([backbone_features, outputs[-1]], dim=1)))
+            latest_res = outputs['locations'][-1]
+            if self.model_cfg.ANGLE:
+                latest_res = torch.cat([latest_res, outputs['angles'][-1]], dim=1)
+            if self.model_cfg.SIZE:
+                latest_res = torch.cat([latest_res, outputs['sizes'][-1]], dim=1)
+
+            refinement_stage_outputs = refinement_stage(torch.cat([backbone_features, latest_res],
+                                                        dim=1))
+            for key in outputs.keys():
+                outputs[key].append(refinement_stage_outputs[key])
 
         return outputs
 
-def build_mobilenet_v1(pretrain, nparts):
-    model = PoseEstimationWithMobileNet(num_refinement_stages=2, num_channels=128, num_heatmaps=nparts)
+def build_mobilenet_v1(model_cfg, pretrain, nparts):
+    model = PoseEstimationWithMobileNet(model_cfg,
+                                        num_refinement_stages=2,
+                                        num_channels=128,
+                                        num_heatmaps=nparts)
 
     if pretrain:
         weights = torch.load('pretrain/mobilenet_v1.pth')

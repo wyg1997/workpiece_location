@@ -19,6 +19,13 @@ class Tester:
         self.model, self.classes = model, classes
         self.num_cls = len(classes) + 1
 
+        # task
+        self.task = ['locations']
+        if self.cfg.MODEL.ANGLE:
+            self.task.append('angles')
+        if self.cfg.MODEL.SIZE:
+            self.task.append('sizes')
+
         self.test_dataloader = get_dataloader(cfg, kind='test', CLASSES=classes)
 
         self.test_cnt = 0
@@ -32,6 +39,7 @@ class Tester:
         eval_dis = AverageMeter()
         eval_p = AverageMeter()
         eval_r = AverageMeter()
+        eval_angle_error = AverageMeter()
 
         for i, data in enumerate(tqdm(self.test_dataloader,
                                       desc=f"Testing")):
@@ -40,42 +48,41 @@ class Tester:
             imgs = ori_imgs.cuda()
             with torch.no_grad():
                 outputs = self.model(imgs)
-            if isinstance(outputs, list):
-                results = outputs[-1]
-            else:
-                results = outputs
-            results = resize_heatmaps(results, self.cfg.MODEL.STRIDE)
 
-            # vis results
-            if show:
-                ori_imgs = resume_imgs(ori_imgs,
-                                       self.cfg.TEST.MEAN,
-                                       self.cfg.TEST.STD)
-                vis_img = vis_heatmaps(ori_imgs, results, alpha=0.5)
-                self.vis.images(vis_img, win=f"test_results[{i}]",
-                                opts=dict(title=f"test_results[{i}]"))
-
+            # collate outputs
+            results = {}
+            for key in self.task:
+                results[key] = resize_heatmaps(outputs[key][-1], self.cfg.MODEL.STRIDE)
             
             kps = get_kps_from_heatmap(results,
                                        threshold=threshold,
                                        size=self.cfg.TEST.SIZE)
-            dis, p, r = eval_key_points(kps, data['anns'], size=self.cfg.TEST.SIZE)
+            eval_res = eval_key_points(kps, data['anns'], size=self.cfg.TEST.SIZE)
             
-            eval_dis.update(dis.avg, dis.count)
-            eval_p.update(p.avg, p.count)
-            eval_r.update(r.avg, r.count)
+            eval_dis.update(eval_res['dis'].avg, eval_res['dis'].count)
+            eval_p.update(eval_res['precision'].avg, eval_res['precision'].count)
+            eval_r.update(eval_res['recall'].avg, eval_res['recall'].count)
+            if 'angles' in self.task:
+                eval_angle_error.update(eval_res['angle_dis'].avg, eval_res['angle_dis'].count)
 
-        self.logger.info(f"Eval result: "
-                         f"dis_loss: {eval_dis.avg:.2f} | "
-                         f"precision: {eval_p.sum:.0f}/{eval_p.count}={eval_p.avg:.2%} | "
-                         f"recall: {eval_r.sum:.0f}/{eval_r.count}={eval_r.avg:.2%}")
+        self.logger.info(
+            f"Eval result: "
+            f"dis_error: {eval_dis.avg:.2f} | "
+            f"angle_error: {-1 if 'angles' not in self.task else eval_angle_error.avg:.4f} | "
+            f"precision: {eval_p.sum:.0f}/{eval_p.count}={eval_p.avg:.2%} | "
+            f"recall: {eval_r.sum:.0f}/{eval_r.count}={eval_r.avg:.2%}")
 
         # draw curve
         self.vis.line(Y=np.array([eval_dis.avg]),
                       X=np.array([self.test_cnt]),
-                      win='test_dis_loss',
+                      win='test_dis_error',
                       update=None if self.test_cnt == 1 else 'append',
-                      opts=dict(title='test_dis_loss'))
+                      opts=dict(title='test_dis_error'))
+        self.vis.line(Y=np.array([eval_angle_error.avg]),
+                      X=np.array([self.test_cnt]),
+                      win='test_angle_error',
+                      update=None if self.test_cnt == 1 else 'append',
+                      opts=dict(title='test_dis_error'))
         self.vis.line(Y=np.array([eval_p.avg]),
                       X=np.array([self.test_cnt]),
                       win='test_precision',
