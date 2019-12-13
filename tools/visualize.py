@@ -16,6 +16,31 @@ from utils.cprint import cprint
 _COLOR = sns.color_palette('Paired', 20)
 
 
+def draw_graphic(img, loc, score, angle, size, color):
+    font_face = cv2.FONT_HERSHEY_COMPLEX 
+    font_scale = 0.3
+    thickness = 1
+
+    # draw arrowedLine
+    rad_angle = angle / 180 * math.pi
+    p2 = (int(loc[0] + size*math.cos(rad_angle)), int(loc[1] - size*math.sin(rad_angle)))
+    img = cv2.arrowedLine(img, loc, p2, color, 1)
+
+    # get text size
+    if score is None:
+        score = 1.0
+    # text: (x, y) | score | angle
+    text = f"({loc[0]}, {loc[1]}) | {score:.2f} | {angle:.1f}"
+    rect, baseline = cv2.getTextSize(text, font_face, font_scale, thickness)
+
+    img = cv2.rectangle(img, (loc[0]+5, loc[1]-rect[1]-baseline+5),
+                        (loc[0]+rect[0]+5, loc[1]+5), (30, 144, 255), -1)
+    img = cv2.putText(img, text, (loc[0]+5, loc[1]+5),
+                      font_face, font_scale, (255, 255, 255), thickness, 16)
+    return img.get()  # UMat to np.array
+
+
+
 def vis_anns(imgs, ann):
     """
     Visualize annotations from dataloader.
@@ -44,11 +69,10 @@ def vis_anns(imgs, ann):
             size = sizes[i].data[j] * 10
             label = labels[i].data[j]
             color = [int(x*255) for x in _COLOR[label]]
-            angle = angles[i].data[j] / 180.0 * math.pi
+            angle = angles[i].data[j]
 
             p1 = (int(locations[i].data[j, 0]), int(locations[i].data[j, 1]))
-            p2 = (int(p1[0]+size*math.cos(angle)), int(p1[1]-size*math.sin(angle)))
-            imgs[i] = cv2.arrowedLine(imgs[i], p1, p2, color, 1).get()
+            imgs[i] = draw_graphic(imgs[i], p1, None, angle, size, color)
     imgs = imgs.transpose(0, 3, 1, 2)
 
     return imgs
@@ -74,19 +98,15 @@ def vis_results(imgs, results):
     for i in range(batch):
         for j in range(num_cls):
             for idx, p in enumerate(results['locations'][i][j]):
-                angle = results['angles'][i][j][idx] / 180.0 * math.pi
+                angle = results['angles'][i][j][idx]
                 x, y, score = p
                 label = j
                 size = 40
                 color = [int(x*255) for x in _COLOR[label]]
 
                 p1 = (int(x), int(y))
-                p2 = (int(p1[0]+size*math.cos(angle)), int(p1[1]-size*math.sin(angle)))
 
-                # 画箭头
-                imgs[i] = cv2.arrowedLine(imgs[i], p1, p2, color, 1).get()
-                # 写位置和角度
-                pass
+                imgs[i] = draw_graphic(imgs[i], p1, score, angle, size, color)
 
     return imgs.transpose(0, 3, 1, 2)
 

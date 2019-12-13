@@ -10,7 +10,7 @@ from datasets.transforms import resume_imgs
 from tools.kps_tools import get_kps_from_heatmap, eval_key_points, resize_heatmaps
 from utils.meters import AverageMeter
 from utils.cprint import cprint
-from tools.visualize import vis_heatmaps
+from tools.visualize import vis_heatmaps, vis_results
 
 
 class Tester:
@@ -57,6 +57,13 @@ class Tester:
             kps = get_kps_from_heatmap(results,
                                        threshold=threshold,
                                        size=self.cfg.TEST.SIZE)
+            # show results
+            if show:
+                ori_imgs = resume_imgs(ori_imgs, self.cfg.TEST.MEAN, self.cfg.TEST.STD)
+                res_img = vis_results(np.copy(ori_imgs), kps)
+                self.vis.images(res_img, win=f"test_results[{i}]",
+                                opts=dict(title=f"test_results[{i}]"))
+
             eval_res = eval_key_points(kps, data['anns'], size=self.cfg.TEST.SIZE)
             
             eval_dis.update(eval_res['dis'].avg, eval_res['dis'].count)
@@ -82,7 +89,7 @@ class Tester:
                       X=np.array([self.test_cnt]),
                       win='test_angle_error',
                       update=None if self.test_cnt == 1 else 'append',
-                      opts=dict(title='test_dis_error'))
+                      opts=dict(title='test_angle_error'))
         self.vis.line(Y=np.array([eval_p.avg]),
                       X=np.array([self.test_cnt]),
                       win='test_precision',
