@@ -133,17 +133,20 @@ class Trainer:
             for out_idx in range(1, len(outputs['locations'])):
                 location_loss += self.criterion(outputs['locations'][out_idx],
                                                 targets['locations'])
+            loss = location_loss
             # angle
-            angle_weight = 0.1
-            angle_loss = self.criterion(outputs['angles'][0],
-                                        targets['angles'],
-                                        ignore=-1) * angle_weight
-            for out_idx in range(1, len(outputs['angles'])):
-                angle_loss += self.criterion(outputs['angles'][out_idx],
-                                             targets['angles'],
-                                             ignore=-1) * angle_weight
-
-            loss = location_loss + angle_loss
+            if 'angles' in self.task:
+                angle_weight = 0.1
+                angle_loss = self.criterion(outputs['angles'][0],
+                                            targets['angles'],
+                                            ignore=-1) * angle_weight
+                for out_idx in range(1, len(outputs['angles'])):
+                    angle_loss += self.criterion(outputs['angles'][out_idx],
+                                                 targets['angles'],
+                                                 ignore=-1) * angle_weight
+                loss += angle_loss
+            else:
+                angle_loss = -1
 
             # backward step
             loss.backward()
@@ -169,6 +172,9 @@ class Trainer:
             r = eval_res['recall']
             if 'angles' in self.task:
                 angle_error = eval_res['angle_dis']
+            else:
+                angle_error = AverageMeter()
+                angle_error.update(-1)
 
             loss = loss.item()
             current_lr = self.optimizer.param_groups[0]['lr']
@@ -183,7 +189,7 @@ class Trainer:
                     f"location_loss: {location_loss:.4f} | "
                     f"angle_loss: {angle_loss:.4f} | "
                     f"dis_offset: {dis.avg:.2f} | "
-                    f"angle_error: {-1 if 'angles' not in self.task else angle_error.avg:.4f} | "
+                    f"angle_error: {angle_error.avg:.4f} | "
                     f"precision: {p.avg:.2%} | "
                     f"recall: {r.avg:.2%} | "
                     f"time: {cost_time*1000:.0f}ms")
