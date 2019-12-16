@@ -154,12 +154,15 @@ _C.SOLVER.CHECKPOINT = 10
 _C.OUTPUT_DIR = 'example/'
 
 
-##########
-# others #
-##########
+#############
+# visualize #
+#############
 
 _C.VISDOM = CN()
 _C.VISDOM.PORT = 8097
-_C.VISDOM.SHOW_LABEL= False
+_C.VISDOM.SHOW_LABEL_HEATMAP = False
+_C.VISDOM.SHOW_TRAIN_HEATMAP = False
+_C.VISDOM.SHOW_LABEL = False
 _C.VISDOM.SHOW_TRAIN_OUT = False
 _C.VISDOM.SHOW_TEST_OUT = False
+_C.VISDOM.SHOW_INFO = False

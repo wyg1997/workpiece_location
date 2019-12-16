@@ -16,7 +16,7 @@ from utils.cprint import cprint
 _COLOR = sns.color_palette('Paired', 20)
 
 
-def draw_graphic(img, loc, score, angle, size, color):
+def draw_graphic(img, loc, score, angle, size, color, show_info=False):
     font_face = cv2.FONT_HERSHEY_COMPLEX 
     font_scale = 0.3
     thickness = 1
@@ -26,22 +26,23 @@ def draw_graphic(img, loc, score, angle, size, color):
     p2 = (int(loc[0] + size*math.cos(rad_angle)), int(loc[1] - size*math.sin(rad_angle)))
     img = cv2.arrowedLine(img, loc, p2, color, 1)
 
-    # get text size
-    if score is None:
-        score = 1.0
-    # text: (x, y) | score | angle
-    text = f"({loc[0]}, {loc[1]}) | {score:.2f} | {angle:.1f}"
-    rect, baseline = cv2.getTextSize(text, font_face, font_scale, thickness)
+    if show_info:
+        # get text size
+        if score is None:
+            score = 1.0
+        # text: (x, y) | score | angle
+        text = f"({loc[0]}, {loc[1]}) | {score:.2f} | {angle:.1f}"
+        rect, baseline = cv2.getTextSize(text, font_face, font_scale, thickness)
 
-    img = cv2.rectangle(img, (loc[0]+5, loc[1]-rect[1]-baseline+5),
-                        (loc[0]+rect[0]+5, loc[1]+5), (30, 144, 255), -1)
-    img = cv2.putText(img, text, (loc[0]+5, loc[1]+5),
-                      font_face, font_scale, (255, 255, 255), thickness, 16)
+        img = cv2.rectangle(img, (loc[0]+5, loc[1]-rect[1]-baseline+5),
+                            (loc[0]+rect[0]+5, loc[1]+5), (30, 144, 255), -1)
+        img = cv2.putText(img, text, (loc[0]+5, loc[1]+5),
+                          font_face, font_scale, (255, 255, 255), thickness, 16)
     return img.get()  # UMat to np.array
 
 
 
-def vis_anns(imgs, ann):
+def vis_anns(imgs, ann, show_info=False):
     """
     Visualize annotations from dataloader.
 
@@ -72,13 +73,13 @@ def vis_anns(imgs, ann):
             angle = angles[i].data[j]
 
             p1 = (int(locations[i].data[j, 0]), int(locations[i].data[j, 1]))
-            imgs[i] = draw_graphic(imgs[i], p1, None, angle, size, color)
+            imgs[i] = draw_graphic(imgs[i], p1, None, angle, size, color, show_info)
     imgs = imgs.transpose(0, 3, 1, 2)
 
     return imgs
 
 
-def vis_results(imgs, results):
+def vis_results(imgs, results, show_info=False):
     """
     Visualize all results.
 
@@ -106,7 +107,7 @@ def vis_results(imgs, results):
 
                 p1 = (int(x), int(y))
 
-                imgs[i] = draw_graphic(imgs[i], p1, score, angle, size, color)
+                imgs[i] = draw_graphic(imgs[i], p1, score, angle, size, color, show_info)
 
     return imgs.transpose(0, 3, 1, 2)
 

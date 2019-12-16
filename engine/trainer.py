@@ -136,7 +136,7 @@ class Trainer:
             loss = location_loss
             # angle
             if 'angles' in self.task:
-                angle_weight = 0.1
+                angle_weight = 0.5
                 angle_loss = self.criterion(outputs['angles'][0],
                                             targets['angles'],
                                             ignore=-1) * angle_weight
@@ -230,26 +230,28 @@ class Trainer:
                                        self.cfg.TRAIN.STD)
 
             # see labels
-            if i == 0:
-                label_img = vis_anns(np.copy(ori_imgs), data['anns'])
+            if self.cfg.VISDOM.SHOW_LABEL and i == 0:
+                label_img = vis_anns(np.copy(ori_imgs), data['anns'],
+                                     self.cfg.VISDOM.SHOW_INFO)
                 self.vis.images(label_img, win='label_image',
                                 opts=dict(title='label_image'))
 
             # see all results(location and angle)
-            if i == 0:
-                res_img = vis_results(np.copy(ori_imgs), kps)
+            if self.cfg.VISDOM.SHOW_TRAIN_OUT and i == 0:
+                res_img = vis_results(np.copy(ori_imgs), kps,
+                                      self.cfg.VISDOM.SHOW_INFO)
                 self.vis.images(res_img, win='result_image',
                                 opts=dict(title='result_image'))
 
             # see label heatmaps
-            if self.cfg.VISDOM.SHOW_LABEL and i == 0:
+            if self.cfg.VISDOM.SHOW_LABEL_HEATMAP and i == 0:
                 targets = resize_heatmaps(targets['locations'], self.cfg.MODEL.STRIDE)
                 vis_images = vis_heatmaps(np.copy(ori_imgs), targets, alpha=0.5)
                 self.vis.images(vis_images, win='label',
                                 opts=dict(title='label'))
 
             # see train heatmap results
-            if self.cfg.VISDOM.SHOW_TRAIN_OUT and i == 0:
+            if self.cfg.VISDOM.SHOW_TRAIN_HEATMAP and i == 0:
                 vis_images = vis_heatmaps(np.copy(ori_imgs), results['locations'], alpha=0.5)
                 self.vis.images(vis_images, win='train_heatmap',
                                 opts=dict(title='train_heatmap'))

@@ -222,7 +222,7 @@ def get_kps_from_heatmap(results, threshold=0.5, size=40):
             angle.append(res)
         angles.append(angle)
 
-        out['angles'] = angles
+    out['angles'] = angles
 
     return out
 

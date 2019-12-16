@@ -60,7 +60,7 @@ class Tester:
             # show results
             if show:
                 ori_imgs = resume_imgs(ori_imgs, self.cfg.TEST.MEAN, self.cfg.TEST.STD)
-                res_img = vis_results(np.copy(ori_imgs), kps)
+                res_img = vis_results(np.copy(ori_imgs), kps, self.cfg.VISDOM.SHOW_INFO)
                 self.vis.images(res_img, win=f"test_results[{i}]",
                                 opts=dict(title=f"test_results[{i}]"))
 

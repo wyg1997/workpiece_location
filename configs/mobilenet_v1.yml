@@ -77,4 +77,7 @@ SOLVER:
 VISDOM:
     SHOW_LABEL: False
     SHOW_TRAIN_OUT: True
+    SHOW_LABEL_HEATMAP: False
+    SHOW_TRAIN_HEATMAP: False
     SHOW_TEST_OUT: True
+    SHOW_INFO: False

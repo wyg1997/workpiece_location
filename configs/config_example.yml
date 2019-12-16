@@ -80,7 +80,10 @@ SOLVER:
 
 # Visdom可视化控制
 VISDOM:
-    SHOW_LABEL: False  # 是否显示标注热力图
+    SHOW_LABEL: False  # 是否显示标注图
     SHOW_TRAIN_OUT: True  # 是否显示训练时的结果图
+    SHOW_LABEL_HEATMAP: False  # 是否显示标注热力图
+    SHOW_TRAIN_HEATMAP: False  # 是否显示训练时结果热力图
     SHOW_TEST_OUT: True  # 是否显示测试结果图
+    SHOW_INFO: False  # 显示模型结果时是否显示信息(位置，角度，置信度)
 
