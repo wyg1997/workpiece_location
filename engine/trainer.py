@@ -136,7 +136,7 @@ class Trainer:
             loss = location_loss
             # angle
             if 'angles' in self.task:
-                angle_weight = 0.5
+                angle_weight = 0.1
                 angle_loss = self.criterion(outputs['angles'][0],
                                             targets['angles'],
                                             ignore=-1) * angle_weight

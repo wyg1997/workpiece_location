@@ -24,7 +24,7 @@ def draw_graphic(img, loc, score, angle, size, color, show_info=False):
     # draw arrowedLine
     rad_angle = angle / 180 * math.pi
     p2 = (int(loc[0] + size*math.cos(rad_angle)), int(loc[1] - size*math.sin(rad_angle)))
-    img = cv2.arrowedLine(img, loc, p2, color, 1)
+    img = cv2.arrowedLine(img, loc, p2, color, 2)
 
     if show_info:
         # get text size
@@ -67,7 +67,7 @@ def vis_anns(imgs, ann, show_info=False):
         num_point = labels[i].data.shape[0]
 
         for j in range(num_point):
-            size = sizes[i].data[j] * 10
+            size = sizes[i].data[j]
             label = labels[i].data[j]
             color = [int(x*255) for x in _COLOR[label]]
             angle = angles[i].data[j]
