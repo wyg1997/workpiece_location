@@ -157,7 +157,7 @@ class Pipline:
         exponent = d2 / 2.0 / sigma / sigma
         exponent = np.exp(-exponent)
 
-        angle_map = np.zeros((map_h, map_w, 2)) - 1  # [h, w, 2]
+        angle_map = np.zeros((map_h, map_w, 2)).astype(np.float32) - 1  # [h, w, 2]
         values = [math.sin(angle/180*math.pi), math.cos(angle/180*math.pi)]
         angle_map[exponent>0.01] = values
         angle_map = angle_map.transpose(2, 0, 1)  # [2, h, w]
@@ -209,7 +209,8 @@ class Pipline:
 
         d2 = (xx-center[0])**2 + (yy-center[1])**2
         exponent = d2 / 2.0 / sigma / sigma
-        heatmap = np.exp(-exponent)
+        heatmap = np.exp(-exponent).astype(np.float32)
+        heatmap[heatmap<0.01] = 0
         return heatmap
 
     def get_gussian_targets(self, ann, size, stride, sigma, num_cls):
