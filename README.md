@@ -29,6 +29,8 @@ python tools/kps_marking_tool.py \
     --idx 1
 ```
 
+`data_root_path`表示数据的根目录，下面有`source`和`label`两个目录。
+
 #### 训练并测试
 
 ```sh

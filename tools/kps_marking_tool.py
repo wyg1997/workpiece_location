@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding=utf-8
 
+import os
 import sys
 sys.path.append('.')
 import os.path as osp
@@ -118,6 +119,9 @@ def main():
     path = args.path
     idx = args.idx
     img_type = args.img_type
+
+    if not osp.exists(osp.join(path, 'label')):
+        os.makedirs(osp.join(path, 'label'))
 
     while(True):
         cprint(f"=== Now image id is {idx} ===", level='warn')
