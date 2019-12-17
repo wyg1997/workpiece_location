@@ -90,18 +90,22 @@ _C.TEST.IMG_INDEX = []
 _C.TEST.IMG_SIZE = [512, 512]
 # do flip
 _C.TEST.DO_FLIP = False
+_C.TEST.FLIP_PROB = 0.5
 # do scale
 _C.TEST.DO_SCALE = False
+_C.TEST.SCALE_RANGE = [0.8, 1.0]
 # do rotate
 _C.TEST.DO_ROTATE = False
+_C.TEST.ALBU_BRIGHTNESS = 0.2
+_C.TEST.ALBU_CONTRAST = 0.5
+_C.TEST.ALBU_SATURATION = 0.5
+_C.TEST.ALBU_HUE = 0.0
 # do albu
 _C.TEST.DO_ALBU = False
 # do image normalization
 _C.TEST.MEAN = [0.485, 0.456, 0.406]
 _C.TEST.STD = [0.229, 0.224, 0.225]
-# random lightning and contrast
-_C.TEST.DO_LIGHTNING = False
-_C.TEST.MAX_LIGHTNING = 0.2
+# feature size
 _C.TEST.SIZE = 40
 
 ##############
