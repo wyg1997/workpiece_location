@@ -209,8 +209,8 @@ def get_kps_from_heatmap(results, threshold=0.5, size=40):
             for p in keypoints[i][j]:
                 x, y = p[0], p[1]
                 if 'angles' in results:
-                    v_sin = angle_map[i, 0, y, x]
-                    v_cos = angle_map[i, 1, y, x]
+                    v_sin = angle_map[i, j*2, y, x]
+                    v_cos = angle_map[i, j*2+1, y, x]
                     a = math.atan(v_sin/(v_cos+1e-10)) * 180 / math.pi
                     if v_cos < 0:
                         a += 180

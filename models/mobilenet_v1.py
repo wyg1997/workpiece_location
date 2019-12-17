@@ -68,7 +68,7 @@ class InitialStage(nn.Module):
         )
         self.angle_maps = nn.Sequential(
             conv(num_channels, 512, kernel_size=1, padding=0, bn=False),
-            conv(512, 2, kernel_size=1, padding=0, bn=False, relu=False)
+            conv(512, num_heatmaps*2, kernel_size=1, padding=0, bn=False, relu=False)
         ) if train_angle else None
 
     def forward(self, x):
@@ -115,7 +115,7 @@ class RefinementStage(nn.Module):
         )
         self.angle_maps = nn.Sequential(
             conv(out_channels, out_channels, kernel_size=1, padding=0, bn=False),
-            conv(out_channels, 2, kernel_size=1, padding=0, bn=False, relu=False)
+            conv(out_channels, num_heatmaps*2, kernel_size=1, padding=0, bn=False, relu=False)
         ) if train_angle else None
 
     def forward(self, x):
@@ -160,7 +160,7 @@ class PoseEstimationWithMobileNet(nn.Module):
         # calculate channels
         refine_channels = num_channels + num_heatmaps
         if self.model_cfg.ANGLE:
-            refine_channels += 2
+            refine_channels += num_heatmaps * 2
         if self.model_cfg.SIZE:
             refine_channels += 1
 
