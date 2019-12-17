@@ -121,6 +121,7 @@ def main():
 
     while(True):
         cprint(f"=== Now image id is {idx} ===", level='warn')
+        assert osp.exists(osp.join(path, 'source', f"{idx}.{img_type}"))
         
         cprint(f"{id2cls}", level='debug')
 
