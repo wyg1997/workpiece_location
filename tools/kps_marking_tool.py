@@ -32,7 +32,7 @@ def indent(elem, level=0):
 
 def write2xml(labels, root_path, idx, img_type):
     img = cv2.imread(osp.join(root_path, 'source', f"{idx}.{img_type}"))
-    h, w = img.shape[-2:]
+    h, w = img.shape[:2]
 
     # write to xml
     root = ET.Element('annotation')
