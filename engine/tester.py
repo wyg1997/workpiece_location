@@ -1,9 +1,13 @@
 #!/usr/bin/env python
 # coding=utf-8
 
+import os
+import os.path as osp
+
 import torch
 import numpy as np
 from tqdm import tqdm
+import cv2
 
 from datasets.build import get_dataloader
 from datasets.transforms import resume_imgs
@@ -29,6 +33,10 @@ class Tester:
         self.test_dataloader = get_dataloader(cfg, kind='test', CLASSES=classes)
 
         self.test_cnt = 0
+        self.save_cnt = 0
+        self.save_dir = osp.join(self.work_dir, 'results/')
+        if not osp.exists(self.save_dir):
+            os.makedirs(self.save_dir)
 
     def test(self, threshold=0.5, show=False):
         self.test_cnt += 1
@@ -61,6 +69,14 @@ class Tester:
             if show:
                 ori_imgs = resume_imgs(ori_imgs, self.cfg.TEST.MEAN, self.cfg.TEST.STD)
                 res_img = vis_results(np.copy(ori_imgs), kps, self.classes, self.cfg.VISDOM.SHOW_INFO)
+
+                # # save results
+                # save_img = res_img.transpose(0, 2, 3, 1)
+                # for i_img in range(res_img.shape[0]):
+                #     self.save_cnt += 1
+                #     cv2.imwrite(osp.join(self.save_dir, f"{self.save_cnt}.png"), save_img[i_img, :, :, ::-1])
+
+                # show results
                 self.vis.images(res_img, win=f"test_results[{i}]",
                                 opts=dict(title=f"test_results[{i}]"))
 

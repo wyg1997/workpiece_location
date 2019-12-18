@@ -77,6 +77,7 @@ class ImageDataset:
         img_infos = []
         if len(self.img_index) == 0:
             self.img_ids = self._get_img_index(data_root)
+            list.sort(self.img_ids)
         else:
             self.img_ids = self.img_index
         for img_id in self.img_ids:
@@ -166,7 +167,7 @@ class ImageDataset:
             if not osp.exists(osp.join(label_path, id+'.xml')):
                 cprint(f"AIDIDataset | {id}.xml is not exist!", level='warn')
                 continue
-            ids.append(id)
+            ids.append(int(id))
         return ids
 
     def _set_group_flag(self):
