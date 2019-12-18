@@ -120,6 +120,7 @@ class Pipline:
                 img_size,
                 self.stride,
                 self.cfg.SIGMA * scale_factor,
+                num_cls
             )
 
         return dict(imgs=img,
@@ -164,7 +165,7 @@ class Pipline:
         return angle_map
 
 
-    def get_angle_targets(self, ann, size, stride, sigma):
+    def get_angle_targets(self, ann, size, stride, sigma, num_cls):
         """
         根据中心点生成角度地图，-1表示忽略的点。
 
@@ -174,14 +175,16 @@ class Pipline:
         H, W = size
         points = ann['locations'].data
         angles = ann['angles'].data
+        labels = ann['labels'].data
         num_points = points.shape[0]
 
-        angle_maps = np.zeros((2, H//stride, W//stride)).astype(np.float32) - 1
+        angle_maps = np.zeros((num_cls*2, H//stride, W//stride)).astype(np.float32) - 1
 
         for i in range(num_points):
+            label = labels.data[i]
             angle = angles[i]
             angle_map = self.get_angle_target(points[i], angle, size, stride, sigma)
-            angle_maps = np.maximum(angle_maps, angle_map)
+            angle_maps[label*2:label*2+2] = np.maximum(angle_maps[label*2:label*2+2], angle_map)
 
         return angle_maps
 

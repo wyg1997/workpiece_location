@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding=utf-8
 
+import os
 import sys
 sys.path.append('.')
 import os.path as osp
@@ -31,7 +32,7 @@ def indent(elem, level=0):
 
 def write2xml(labels, root_path, idx, img_type):
     img = cv2.imread(osp.join(root_path, 'source', f"{idx}.{img_type}"))
-    h, w = img.shape[-2:]
+    h, w = img.shape[:2]
 
     # write to xml
     root = ET.Element('annotation')
@@ -118,6 +119,9 @@ def main():
     path = args.path
     idx = args.idx
     img_type = args.img_type
+
+    if not osp.exists(osp.join(path, 'label')):
+        os.makedirs(osp.join(path, 'label'))
 
     while(True):
         cprint(f"=== Now image id is {idx} ===", level='warn')
