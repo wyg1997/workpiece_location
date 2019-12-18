@@ -15,6 +15,12 @@
 
 ### Usage
 
+#### 安装依赖
+
+```sh
+pip install -r requirements.txt
+```
+
 #### 设置参数
 
 参数文件的涵义见[configs/config_example.yml](configs/config_example.yml)。
