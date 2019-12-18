@@ -90,7 +90,7 @@ def main():
     cpt = torch.load(args.checkpoint)
     classes = cpt['classes']
     num_cls = len(classes)
-    model = build_model(cfg.MODEL.BACKBONE, num_cls, cfg.MODEL.PRETRAIN)
+    model = build_model(cfg.MODEL, num_cls)
     model.load_state_dict(cpt['checkpoint'])
     model = model.cuda()
 
