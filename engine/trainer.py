@@ -181,7 +181,7 @@ class Trainer:
 
             # 5. Print to logger.
             # write log
-            if i % self.cfg.SOLVER.LOG_INTERVAL == 0:
+            if (i+1) % self.cfg.SOLVER.LOG_INTERVAL == 0:
                 self.logger.info(
                     f"Epoch: {self.current_epoch} | "
                     f"Iter: {i+1}/{len(self.train_dataloader)} | "
@@ -232,6 +232,7 @@ class Trainer:
             # see labels
             if self.cfg.VISDOM.SHOW_LABEL and i == 0:
                 label_img = vis_anns(np.copy(ori_imgs), data['anns'],
+                                     self.classes,
                                      self.cfg.VISDOM.SHOW_INFO)
                 self.vis.images(label_img, win='label_image',
                                 opts=dict(title='label_image'))
@@ -239,6 +240,7 @@ class Trainer:
             # see all results(location and angle)
             if self.cfg.VISDOM.SHOW_TRAIN_OUT and i == 0:
                 res_img = vis_results(np.copy(ori_imgs), kps,
+                                      self.classes,
                                       self.cfg.VISDOM.SHOW_INFO)
                 self.vis.images(res_img, win='result_image',
                                 opts=dict(title='result_image'))

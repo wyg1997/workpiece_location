@@ -60,9 +60,14 @@ class Tester:
             # show results
             if show:
                 ori_imgs = resume_imgs(ori_imgs, self.cfg.TEST.MEAN, self.cfg.TEST.STD)
-                res_img = vis_results(np.copy(ori_imgs), kps, self.cfg.VISDOM.SHOW_INFO)
+                res_img = vis_results(np.copy(ori_imgs), kps, self.classes, self.cfg.VISDOM.SHOW_INFO)
                 self.vis.images(res_img, win=f"test_results[{i}]",
                                 opts=dict(title=f"test_results[{i}]"))
+
+                # # heatmap
+                # heat_img = vis_heatmaps(np.copy(ori_imgs), results['locations'], alpha=0.5)
+                # self.vis.images(heat_img, win=f"test_result_heatmap[{i}]",
+                #                 opts=dict(title=f"test_result_heatmap[{i}]"))
 
             eval_res = eval_key_points(kps, data['anns'], size=self.cfg.TEST.SIZE)
             

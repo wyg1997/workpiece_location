@@ -135,6 +135,7 @@ def nms_points(x, y, score, size=40):
     points = []
 
     order = np.argsort(-score)
+    score = score.clip(0.0, 1.0)
 
     for idx in order:
         p = [x[idx], y[idx], score[idx]]
@@ -156,7 +157,8 @@ def get_kps_from_heatmap(results, threshold=0.5, size=40):
     Calculate keypoints from network output.
 
     Input:
-        heatmap -> Dict('location': torch[n, k, h, w], ['angle': torch[n, 2, h, w]])
+        heatmap -> Dict('location': np.array[n, k, h, w],
+                        ['angle': np.array[n, 2, h, w]])
             The outputs from network.
         threshold -> Float
             The threshold for bg and fg.
