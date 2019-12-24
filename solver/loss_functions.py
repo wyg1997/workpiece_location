@@ -27,9 +27,6 @@ def angle_loss_func(output, target, mask):
     mask = mask.permute(0, 2, 3, 1)
 
     # loss = 1 - sin(a)*sin(x) - cos(a)*cos(x)
-    cprint(f"output: {output[0, mask[0]].reshape(-1, 2)[:5]}", level='debug')
-    cprint(f"target: {target[0, mask[0]].reshape(-1, 2)[:5]}", level='debug')
-
     loss = None
     for i in range(batch_size):
         if loss is None:
