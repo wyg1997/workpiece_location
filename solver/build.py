@@ -6,7 +6,7 @@ import torch
 from utils.cprint import cprint
 from .lr_scheduler import WarmupMultiStepLR
 from .get_parameters import get_parameters_conv, get_parameters_bn, get_parameters_conv_depthwise
-from .loss.l2_loss import l2_loss
+from .loss_functions import l2_loss
 
 
 _ALL_OPTIMIZER = ['sgd', 'adam', 'rmsprop']

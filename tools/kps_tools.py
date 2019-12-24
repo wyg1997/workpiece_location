@@ -106,6 +106,7 @@ def eval_key_points(res, anns, size=40):
                         if 'angles' in res:
                             angle_off = abs(res_angles[i][j][i_d] - tar_angle[i_t])
                             angle_dis.update(min(angle_off, 360-angle_off))
+                            # cprint(f"res_angle: {res_angles[i][j][i_d]}    tar_angle: {tar_angle[i_t]}", level='debug')
                         visit.append(i_t)
                         break
             precision.update(1, ok)
@@ -150,6 +151,51 @@ def nms_points(x, y, score, size=40):
             points.append(p)
 
     return points
+
+
+def calc_angle(v_sin, v_cos):
+    a = math.atan(v_sin/(v_cos+1e-10)) * 180 / math.pi
+    if v_cos < 0:
+        a += 180
+    # [0, 360)
+    a = a % 360
+    return a
+
+
+def error_exclude(list_sin, list_cos):
+    a_value = []
+    for i in range(4):
+        v_sin = list_sin[i]
+        v_cos = list_cos[i]
+
+        angle_value = calc_angle(v_sin, v_cos) + 45 + i*90
+        angle_value = angle_value % 360
+
+        list_sin[i] = math.sin(angle_value/180*math.pi)
+        list_cos[i] = math.cos(angle_value/180*math.pi)
+        a_value.append(angle_value)
+
+    # error excluding algorithm
+    for i in range(len(a_value)):
+        a_rest = []
+        for j in range(len(a_value)):
+            if j != i:
+                a_rest.append(a_value[j])
+        x1 = abs(a_value[i] - a_rest[0])
+        x2 = abs(a_value[i] - a_rest[1])
+        x3 = abs(a_value[i] - a_rest[2])
+        delta_angle = max(x1, x2, x3) - min(x1, x2, x3)
+        if x1 > delta_angle and x2 > delta_angle and x3 > delta_angle:
+            if  delta_angle < 60:
+                del list_sin[i]
+                del list_cos[i]
+                break
+
+    sin_value = sum(list_sin) / len(list_sin)
+    cos_value = sum(list_cos) / len(list_cos)
+
+    angle_value = calc_angle(sin_value, cos_value)
+    return angle_value
 
 
 def get_kps_from_heatmap(results, threshold=0.5, size=40):
@@ -211,13 +257,14 @@ def get_kps_from_heatmap(results, threshold=0.5, size=40):
             for p in keypoints[i][j]:
                 x, y = p[0], p[1]
                 if 'angles' in results:
-                    v_sin = angle_map[i, j*2, y, x]
-                    v_cos = angle_map[i, j*2+1, y, x]
-                    a = math.atan(v_sin/(v_cos+1e-10)) * 180 / math.pi
-                    if v_cos < 0:
-                        a += 180
-                    if a < 0:
-                        a += 360
+                    list_sin = []
+                    list_cos = []
+                    for b in range(4):
+                        v_sin = angle_map[i, b*2, y, x]
+                        v_cos = angle_map[i, b*2+1, y, x]
+                        list_sin.append(v_sin)
+                        list_cos.append(v_cos)
+                    a = error_exclude(list_sin, list_cos)
                 else:
                     a = 0
                 res.append(a)
