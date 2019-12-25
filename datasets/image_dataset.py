@@ -50,6 +50,7 @@ class ImageDataset:
         self.img_type = cfg.IMG_TYPE
         assert self.img_type in self.all_img_type, f"img_type must be one of {self.all_img_type}"
 
+        self.cfg = cfg
         self.data_root = osp.abspath(cfg.DATA_ROOT)
         self.img_index = cfg.IMG_INDEX
         self.test_mode = test_mode
@@ -80,6 +81,9 @@ class ImageDataset:
             list.sort(self.img_ids)
         else:
             self.img_ids = self.img_index
+        # repeat data
+        self.img_ids = self.img_ids * self.cfg.REPEAT_DATA
+
         for img_id in self.img_ids:
             filename = osp.join(data_root, f"source/{img_id}.{self.img_type}")
             xml_path = osp.join(data_root, f"label/{img_id}.xml")
