@@ -157,7 +157,7 @@ class Pipline:
         d2 = (xx-center[0])**2 + (yy-center[1])**2
         exponent = d2 / 2.0 / sigma / sigma
         exponent = np.exp(-exponent)
-        mask = exponent>0.01
+        mask = exponent>0.5
 
         angle = angle / 180 * math.pi
         angle_map = np.zeros((map_h, map_w, 8)).astype(np.float32) - 1  # [h, w, 8]

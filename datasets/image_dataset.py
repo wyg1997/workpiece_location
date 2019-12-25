@@ -132,7 +132,7 @@ class ImageDataset:
             sizes = np.zeros((0, ))
             angles = np.zeros((0, ))
         else:
-            locations = np.array(locations, ndmin=2) - 1
+            locations = np.array(locations, ndmin=2)
             labels = np.array(labels)
             sizes = np.array(sizes)
             angles = np.array(angles)
