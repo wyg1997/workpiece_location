@@ -30,7 +30,7 @@ class Tester:
         if self.cfg.MODEL.SIZE:
             self.task.append('sizes')
 
-        self.test_dataloader = get_dataloader(cfg, kind='test', CLASSES=classes)
+        self.dataset, self.test_dataloader = get_dataloader(cfg, kind='test', CLASSES=classes)
 
         self.test_cnt = 0
         self.save_cnt = 0

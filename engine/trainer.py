@@ -25,7 +25,7 @@ class Trainer:
         self.cfg, self.logger, self.vis, self.work_dir = cfg, logger, vis, work_dir
 
         # dataloader
-        self.train_dataloader, self.classes = \
+        self.dataset, self.train_dataloader, self.classes = \
             get_dataloader(cfg, kind='train', CLASSES=cfg.MODEL.CLASSES)
         self.num_cls = len(self.classes)
         self.logger.info(f"classes: {self.classes}")

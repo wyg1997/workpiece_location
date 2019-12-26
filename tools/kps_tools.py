@@ -266,7 +266,7 @@ def get_kps_from_heatmap(results, threshold=0.5, size=40):
                         list_cos.append(v_cos)
                     a = error_exclude(list_sin, list_cos)
                 else:
-                    a = 0
+                    a = -1
                 res.append(a)
             angle.append(res)
         angles.append(angle)
