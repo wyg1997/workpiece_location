@@ -1,31 +1,33 @@
 MODEL:
-    NAME: 'type-c'
+    NAME: 'base'
     VERSION: 'v1'
     DESCRIPTION: 'MobileNetV1 model with l2 loss'
     CLASSES: []
     STRIDE: 8
     BACKBONE: 'mobilenet_v1'
     PRETRAIN: True
+    CHECKPOINT: ''
     ANGLE: True
     SIZE: False
 
 
 TRAIN:
-    DATA_ROOT: 'data/type-c/train'
-    IMG_INDEX: []
-    IMG_SIZE: [256, 320]
+    DATA_ROOT: 'data/base/train'
+    IMG_INDEX: [1, 4, 8, 26]
+    REPEAT_DATA: 4
+    IMG_SIZE: [480, 640]
     MEAN: [0.0, 0.0, 0.0]
     STD: [1.0, 1.0, 1.0]
-    IMG_TYPE: 'png'
+    IMG_TYPE: 'bmp'
     SIGMA: 8
     DO_FLIP: False
     FLIP_PROB: 0.5
     DO_SCALE: True
     SCALE_RANGE: [0.5, 1.5]
     DO_ROTATE: True
-    ROTATE_RANGE: [-5.0, 5.0]
+    ROTATE_RANGE: [-45.0, 45.0]
     DO_ALBU: True
-    ALBU_BRIGHTNESS: 0.5
+    ALBU_BRIGHTNESS: 1.5
     ALBU_CONTRAST: 0.5
     ALBU_SATURATION: 0.5
     ALBU_HUE: 0.0
@@ -33,51 +35,53 @@ TRAIN:
 
 
 TEST:
-    DATA_ROOT: 'data/type-c/test'
+    DATA_ROOT: 'data/base/test'
     IMG_INDEX: []
-    IMG_SIZE: [256, 320]
+    IMG_SIZE: [480, 640]
     MEAN: [0.0, 0.0, 0.0]
     STD: [1.0, 1.0, 1.0]
-    IMG_TYPE: 'png'
+    IMG_TYPE: 'bmp'
     SIZE: 20
 
 
 DATALOADER:
     TRAIN:
         BATCH_SIZE: 4
-        WORKERS: 0
+        WORKERS: 4
     TEST:
-        BATCH_SIZE: 8
-        WORKERS: 0
+        BATCH_SIZE: 4
+        WORKERS: 4
 
 
 SOLVER:
-    EPOCHS: 200
+    EPOCHS: 300
     # loss function
     LOSS: 'l2'
     # optimizer
     OPT: 'adam'
-    BASE_LR: 0.001
+    BASE_LR: 0.0005
     MOMENTUM: 0.9
     WEIGHT_DECAY: 0.0001
     # step
     GAMMA: 0.1
-    STEPS: [60, 120, 180]
+    # STEPS: [60, 120, 180]
+    # STEPS: [120, 240, 360]
+    STEPS: [120, 240]
     # warm up
     WARMUP_FACTOR: 0.33
-    WARMUP_ITERS: 6
+    WARMUP_ITERS: 15
     WARMUP_METHOD: 'linear'
     # log
     LOG_INTERVAL: 1
     # eval
     EVAL_EPOCH: 10
     # save model
-    CHECKPOINT: 10
+    CHECKPOINT: 50
 
 VISDOM:
     SHOW_LABEL: False
-    SHOW_TRAIN_OUT: True
+    SHOW_TRAIN_OUT: False
     SHOW_LABEL_HEATMAP: False
     SHOW_TRAIN_HEATMAP: False
-    SHOW_TEST_OUT: True
-    SHOW_INFO: False
+    SHOW_TEST_OUT: False
+    SHOW_INFO: True

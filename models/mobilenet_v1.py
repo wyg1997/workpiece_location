@@ -3,8 +3,20 @@
 
 import torch
 from torch import nn
+import torch.nn.functional as F
 
 from utils.cprint import cprint
+
+
+def angle_l2_norm(angles):
+    n, _, h, w = angles.shape
+
+    angles = angles.permute(0, 2, 3 ,1)  # [n, h, w, 8]
+    angles = angles.reshape(n, h*w*4, 2)  # [n, h*w*4, 2]
+    angles = F.normalize(angles, p=2, dim=2)
+    angles = angles.reshape(n, h, w, 8)  # [n, h, w, 8]
+    angles = angles.permute(0, 3, 1, 2)  # [n, 8, h, w]
+    return angles
 
 
 def conv(in_channels, out_channels, kernel_size=3, padding=1, bn=True, dilation=1, stride=1, relu=True, bias=True):
@@ -68,7 +80,7 @@ class InitialStage(nn.Module):
         )
         self.angle_maps = nn.Sequential(
             conv(num_channels, 512, kernel_size=1, padding=0, bn=False),
-            conv(512, num_heatmaps*2, kernel_size=1, padding=0, bn=False, relu=False)
+            conv(512, 8, kernel_size=1, padding=0, bn=False, relu=False)
         ) if train_angle else None
 
     def forward(self, x):
@@ -80,6 +92,7 @@ class InitialStage(nn.Module):
         # angle
         if self.angle_maps is not None:
             outputs['angles'] = self.angle_maps(trunk_features)
+            outputs['angles'] = angle_l2_norm(outputs['angles'])
 
         return outputs
 
@@ -115,7 +128,7 @@ class RefinementStage(nn.Module):
         )
         self.angle_maps = nn.Sequential(
             conv(out_channels, out_channels, kernel_size=1, padding=0, bn=False),
-            conv(out_channels, num_heatmaps*2, kernel_size=1, padding=0, bn=False, relu=False)
+            conv(out_channels, 8, kernel_size=1, padding=0, bn=False, relu=False)
         ) if train_angle else None
 
     def forward(self, x):
@@ -127,6 +140,7 @@ class RefinementStage(nn.Module):
         # angle
         if self.angle_maps is not None:
             outputs['angles'] = self.angle_maps(trunk_features)
+            outputs['angles'] = angle_l2_norm(outputs['angles'])
         return outputs
 
 
@@ -160,7 +174,7 @@ class PoseEstimationWithMobileNet(nn.Module):
         # calculate channels
         refine_channels = num_channels + num_heatmaps
         if self.model_cfg.ANGLE:
-            refine_channels += num_heatmaps * 2
+            refine_channels += 8
         if self.model_cfg.SIZE:
             refine_channels += 1
 
@@ -203,7 +217,7 @@ class PoseEstimationWithMobileNet(nn.Module):
 
 def build_mobilenet_v1(model_cfg, pretrain, nparts):
     model = PoseEstimationWithMobileNet(model_cfg,
-                                        num_refinement_stages=2,
+                                        num_refinement_stages=1,
                                         num_channels=128,
                                         num_heatmaps=nparts)
 

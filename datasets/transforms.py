@@ -157,11 +157,17 @@ class Pipline:
         d2 = (xx-center[0])**2 + (yy-center[1])**2
         exponent = d2 / 2.0 / sigma / sigma
         exponent = np.exp(-exponent)
+        mask = exponent>0.5
 
-        angle_map = np.zeros((map_h, map_w, 2)).astype(np.float32) - 1  # [h, w, 2]
-        values = [math.sin(angle/180*math.pi), math.cos(angle/180*math.pi)]
-        angle_map[exponent>0.01] = values
-        angle_map = angle_map.transpose(2, 0, 1)  # [2, h, w]
+        angle = angle / 180 * math.pi
+        angle_map = np.zeros((map_h, map_w, 8)).astype(np.float32) - 1  # [h, w, 8]
+
+        for i in range(4):
+            base_angle = math.pi/4 + i*math.pi/2
+            values = [math.sin(angle-base_angle), math.cos(angle-base_angle)]
+            angle_map[mask, i*2:i*2+2] = values
+
+        angle_map = angle_map.transpose(2, 0, 1)  # [8, h, w]
         return angle_map
 
 
@@ -178,13 +184,13 @@ class Pipline:
         labels = ann['labels'].data
         num_points = points.shape[0]
 
-        angle_maps = np.zeros((num_cls*2, H//stride, W//stride)).astype(np.float32) - 1
+        angle_maps = np.zeros((8, H//stride, W//stride)).astype(np.float32) - 1
 
         for i in range(num_points):
             label = labels.data[i]
             angle = angles[i]
             angle_map = self.get_angle_target(points[i], angle, size, stride, sigma)
-            angle_maps[label*2:label*2+2] = np.maximum(angle_maps[label*2:label*2+2], angle_map)
+            angle_maps = np.maximum(angle_maps, angle_map)
 
         return angle_maps
 

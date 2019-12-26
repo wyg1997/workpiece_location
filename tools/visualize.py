@@ -21,10 +21,11 @@ def draw_graphic(img, loc, score, angle, size, color, classes, show_info=False):
     font_scale = 0.5
     thickness = 1
 
-    # # draw arrowedLine
-    # rad_angle = angle / 180 * math.pi
-    # p2 = (int(loc[0] + size*math.cos(rad_angle)), int(loc[1] - size*math.sin(rad_angle)))
-    # img = cv2.arrowedLine(img, loc, p2, color, 2)
+    # draw arrowedLine
+    if angle != -1:
+        rad_angle = angle / 180 * math.pi
+        p2 = (int(loc[0] + size*math.cos(rad_angle)), int(loc[1] - size*math.sin(rad_angle)))
+        img = cv2.arrowedLine(img, loc, p2, color, 2)
 
     # draw circle
     radius = 5
@@ -106,6 +107,8 @@ def vis_results(imgs, results, classes, show_info=False):
         for j in range(num_cls):
             for idx, p in enumerate(results['locations'][i][j]):
                 angle = results['angles'][i][j][idx]
+                if angle <= 0:
+                    angle = -1
                 x, y, score = p
                 label = j
                 size = 40

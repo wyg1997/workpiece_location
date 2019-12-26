@@ -27,7 +27,7 @@ def get_dataloader(cfg, kind, CLASSES=[]):
                                       pin_memory=True
                                      )
         cprint(f"finish loading, the number of images is {len(train_imgs)}")
-        return train_dataloader, train_imgs.CLASSES
+        return train_imgs, train_dataloader, train_imgs.CLASSES
     elif kind == 'test':
         assert CLASSES is not None, "test dataloader `CLASSES` must not be None."
         cprint('loading test dataloader...')
@@ -40,7 +40,7 @@ def get_dataloader(cfg, kind, CLASSES=[]):
                                      num_workers=cfg.DATALOADER.TEST.WORKERS,
                                     )
         cprint(f"finish loading, the number of images is {len(test_imgs)}")
-        return test_dataloader
+        return test_imgs, test_dataloader
     else:
         cprint(f"dataloader kind must be one of {_ALL_KIND}")
         raise NameError(f"not support dataloader kind {kind}")

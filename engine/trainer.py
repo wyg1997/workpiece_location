@@ -17,6 +17,7 @@ from tools.visualize import vis_heatmaps, vis_anns, vis_results
 from tools.kps_tools import get_kps_from_heatmap, eval_key_points, resize_heatmaps
 from models.build import build_model
 from .tester import Tester
+from solver.loss_functions import angle_loss_func
 
 
 class Trainer:
@@ -24,7 +25,7 @@ class Trainer:
         self.cfg, self.logger, self.vis, self.work_dir = cfg, logger, vis, work_dir
 
         # dataloader
-        self.train_dataloader, self.classes = \
+        self.dataset, self.train_dataloader, self.classes = \
             get_dataloader(cfg, kind='train', CLASSES=cfg.MODEL.CLASSES)
         self.num_cls = len(self.classes)
         self.logger.info(f"classes: {self.classes}")
@@ -136,14 +137,19 @@ class Trainer:
             loss = location_loss
             # angle
             if 'angles' in self.task:
-                angle_weight = 0.1
-                angle_loss = self.criterion(outputs['angles'][0],
+                angle_weight = 1.0
+                mask = (outputs['locations'][0].max(axis=1)[0] >= 0.5).unsqueeze(1).repeat(1, 8, 1, 1)
+                mask = mask & (targets['angles'] != -1)
+
+                angle_loss = angle_loss_func(outputs['angles'][0],
                                             targets['angles'],
-                                            ignore=-1) * angle_weight
+                                            mask) * angle_weight
                 for out_idx in range(1, len(outputs['angles'])):
-                    angle_loss += self.criterion(outputs['angles'][out_idx],
+                    mask = (outputs['locations'][out_idx].max(axis=1)[0] >= 0.5).unsqueeze(1).repeat(1, 8, 1, 1)
+                    mask = mask & (targets['angles'] != -1)
+                    angle_loss += angle_loss_func(outputs['angles'][out_idx],
                                                  targets['angles'],
-                                                 ignore=-1) * angle_weight
+                                                 mask) * angle_weight
                 loss += angle_loss
             else:
                 angle_loss = -1

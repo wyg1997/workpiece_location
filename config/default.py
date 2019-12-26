@@ -46,6 +46,7 @@ _C.TRAIN.DATA_ROOT = ''
 _C.TRAIN.IMG_TYPE = 'png'
 # image index(optional, set None will train all images)
 _C.TRAIN.IMG_INDEX = []
+_C.TRAIN.REPEAT_DATA = 1
 # size: [h, w]
 _C.TRAIN.IMG_SIZE = [512, 512]
 # do flip
@@ -86,6 +87,7 @@ _C.TEST.DATA_ROOT = ''
 _C.TEST.IMG_TYPE = 'png'
 # image index(optional, set None will train all images)
 _C.TEST.IMG_INDEX = []
+_C.TEST.REPEAT_DATA = 1
 # size: [h, w]
 _C.TEST.IMG_SIZE = [512, 512]
 # do flip
