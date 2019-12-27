@@ -113,7 +113,7 @@ class Pipline:
             num_cls
         ) if self.is_train else []
 
-        # angle maps [n, 2, h, w] (channel=2 means sin and cos value)
+        # angle maps [n, 8, h, w] (channel=8 means sin and cos value in 4 quadrant)
         if self.is_train and self.train_angle:
             targets['angles'] = self.get_angle_targets(
                 ann,
