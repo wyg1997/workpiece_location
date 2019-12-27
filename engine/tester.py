@@ -8,6 +8,7 @@ import torch
 import numpy as np
 from tqdm import tqdm
 import cv2
+from prefetch_generator import BackgroundGenerator
 
 from datasets.build import get_dataloader
 from datasets.transforms import resume_imgs
@@ -49,8 +50,8 @@ class Tester:
         eval_r = AverageMeter()
         eval_angle_error = AverageMeter()
 
-        for i, data in enumerate(tqdm(self.test_dataloader,
-                                      desc=f"Testing")):
+        for i, data in enumerate(BackgroundGenerator(tqdm(self.test_dataloader,
+                                                          desc=f"Testing"))):
             ori_imgs = data['imgs']
 
             imgs = ori_imgs.cuda()
@@ -70,15 +71,15 @@ class Tester:
                 ori_imgs = resume_imgs(ori_imgs, self.cfg.TEST.MEAN, self.cfg.TEST.STD)
                 res_img = vis_results(np.copy(ori_imgs), kps, self.classes, self.cfg.VISDOM.SHOW_INFO)
 
-                # # save results
-                # save_img = res_img.transpose(0, 2, 3, 1)
-                # for i_img in range(res_img.shape[0]):
-                #     self.save_cnt += 1
-                #     cv2.imwrite(osp.join(self.save_dir, f"{self.save_cnt}.png"), save_img[i_img, :, :, ::-1])
+                # save results
+                save_img = res_img.transpose(0, 2, 3, 1)
+                for i_img in range(res_img.shape[0]):
+                    self.save_cnt += 1
+                    cv2.imwrite(osp.join(self.save_dir, f"{self.save_cnt}.png"), save_img[i_img, :, :, ::-1])
 
-                # show results
-                self.vis.images(res_img, win=f"test_results[{i}]",
-                                opts=dict(title=f"test_results[{i}]"))
+                # # show results
+                # self.vis.images(res_img, win=f"test_results[{i}]",
+                #                 opts=dict(title=f"test_results[{i}]"))
 
                 # # heatmap
                 # heat_img = vis_heatmaps(np.copy(ori_imgs), results['locations'], alpha=0.5)

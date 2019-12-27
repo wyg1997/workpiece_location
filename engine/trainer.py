@@ -7,6 +7,7 @@ import time
 
 import torch
 import numpy as np
+from prefetch_generator import BackgroundGenerator
 
 from datasets.build import get_dataloader
 from datasets.transforms import resume_imgs
@@ -111,7 +112,7 @@ class Trainer:
             6. Show results to visdom.
         in each iter.
         """
-        for i, data in enumerate(self.train_dataloader):
+        for i, data in enumerate(BackgroundGenerator(self.train_dataloader)):
             start_time = time.time()
             # 1. Load datas and forward.
             ori_imgs = data['imgs']
