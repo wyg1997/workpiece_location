@@ -18,7 +18,7 @@ from tools.visualize import vis_heatmaps, vis_anns, vis_results
 from tools.kps_tools import get_kps_from_heatmap, eval_key_points, resize_heatmaps
 from models.build import build_model
 from .tester import Tester
-from solver.loss_functions import angle_loss_func
+from solver.loss_functions import angle_loss_func, size_loss_func
 
 
 class Trainer:
@@ -136,6 +136,7 @@ class Trainer:
                 location_loss += self.criterion(outputs['locations'][out_idx],
                                                 targets['locations'])
             loss = location_loss
+
             # angle
             if 'angles' in self.task:
                 angle_weight = 1.0
@@ -143,8 +144,8 @@ class Trainer:
                 mask = mask & (targets['angles'] != -1)
 
                 angle_loss = angle_loss_func(outputs['angles'][0],
-                                            targets['angles'],
-                                            mask) * angle_weight
+                                             targets['angles'],
+                                             mask) * angle_weight
                 for out_idx in range(1, len(outputs['angles'])):
                     mask = (outputs['locations'][out_idx].max(axis=1)[0] >= 0.5).unsqueeze(1).repeat(1, 8, 1, 1)
                     mask = mask & (targets['angles'] != -1)
@@ -154,6 +155,25 @@ class Trainer:
                 loss += angle_loss
             else:
                 angle_loss = -1
+
+            # size
+            if 'sizes' in self.task:
+                size_weight = 1.0
+                mask = (outputs['locations'][0].max(axis=1)[0] >= 0.5).unsqueeze(1)
+                mask = mask & (targets['sizes'] != -1)
+
+                size_loss = size_loss_func(outputs['sizes'][0],
+                                           targets['sizes'],
+                                           mask) * size_weight
+                for out_idx in range(1, len(outputs['sizes'])):
+                    mask = (outputs['locations'][out_idx].max(axis=1)[0] >= 0.5).unsqueeze(1)
+                    mask = mask & (targets['sizes'] != -1)
+                    size_loss += size_loss_func(outputs['sizes'][out_idx],
+                                                targets['sizes'],
+                                                mask) * size_weight
+                loss += size_loss
+            else:
+                size_loss = -1
 
             # backward step
             loss.backward()
@@ -177,11 +197,18 @@ class Trainer:
             dis = eval_res['dis']
             p = eval_res['precision']
             r = eval_res['recall']
+            # angle error
             if 'angles' in self.task:
-                angle_error = eval_res['angle_dis']
+                angle_error = eval_res['angle_error']
             else:
                 angle_error = AverageMeter()
                 angle_error.update(-1)
+            # size error
+            if 'sizes' in self.task:
+                size_error = eval_res['size_error']
+            else:
+                size_error = AverageMeter()
+                size_error.update(-1)
 
             loss = loss.item()
             current_lr = self.optimizer.param_groups[0]['lr']
@@ -195,8 +222,10 @@ class Trainer:
                     f"lr: {current_lr:.2e} | "
                     f"location_loss: {location_loss:.4f} | "
                     f"angle_loss: {angle_loss:.4f} | "
+                    f"size_loss: {size_loss:.4f} | "
                     f"dis_offset: {dis.avg:.2f} | "
                     f"angle_error: {angle_error.avg:.4f} | "
+                    f"size_error: {size_error.avg:.2f} | "
                     f"precision: {p.avg:.2%} | "
                     f"recall: {r.avg:.2%} | "
                     f"time: {cost_time*1000:.0f}ms")
@@ -226,9 +255,23 @@ class Trainer:
             # dis line
             self.vis.line(Y=np.array([dis.avg]),
                           X=np.array([self.global_step]),
-                          win='dis_loss',
+                          win='dis_error',
                           update=None if self.global_step == 1 else 'append',
-                          opts=dict(title='train_dis_loss'))
+                          opts=dict(title='train_dis_error'))
+
+            # angle line
+            self.vis.line(Y=np.array([angle_error.avg]),
+                          X=np.array([self.global_step]),
+                          win='angle_error',
+                          update=None if self.global_step == 1 else 'append',
+                          opts=dict(title='train_angle_error'))
+
+            # size line
+            self.vis.line(Y=np.array([size_error.avg]),
+                          X=np.array([self.global_step]),
+                          win='size_error',
+                          update=None if self.global_step == 1 else 'append',
+                          opts=dict(title='train_size_error'))
 
             # resume origin images
             if i == 0:

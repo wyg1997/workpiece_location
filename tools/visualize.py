@@ -24,11 +24,11 @@ def draw_graphic(img, loc, score, angle, size, color, classes, show_info=False):
     # draw arrowedLine
     if angle != -1:
         rad_angle = angle / 180 * math.pi
-        p2 = (int(loc[0] + size*math.cos(rad_angle)), int(loc[1] - size*math.sin(rad_angle)))
+        p2 = (int(loc[0] + 40*math.cos(rad_angle)), int(loc[1] - 40*math.sin(rad_angle)))
         img = cv2.arrowedLine(img, loc, p2, color, 2)
 
     # draw circle
-    radius = 5
+    radius = size
     img = cv2.circle(img, loc, radius, color, 2, lineType=0)
 
     if show_info:
@@ -106,12 +106,16 @@ def vis_results(imgs, results, classes, show_info=False):
     for i in range(batch):
         for j in range(num_cls):
             for idx, p in enumerate(results['locations'][i][j]):
+                # angle
                 angle = results['angles'][i][j][idx]
                 if angle <= 0:
                     angle = -1
+                # size
+                size = results['sizes'][i][j][idx]
+                if size == -1:
+                    size = 40
                 x, y, score = p
                 label = j
-                size = 40
                 color = [int(x*255) for x in _COLOR[label]]
 
                 p1 = (int(x), int(y))

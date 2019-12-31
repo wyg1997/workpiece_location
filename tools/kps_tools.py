@@ -51,30 +51,38 @@ def eval_key_points(res, anns, size=40):
             Groundtruth keypoints(more informations see datasets/image_dataset.py).
 
     Outputs:
-        dict('dis': offset, 'precision': precision, 'recall': recall, ['angle_dis': angle_dis])
+        dict('dis': offset, 'precision': precision, 'recall': recall,
+             ['angle_error': angle_error], ['size_error': size_error])
             offset -> Float
                 Distance with groundtruth.
             precision -> Float
                 Precisions with results.
             recall -> Float
                 Recall with results.
-            [angle_dis -> Float
+            [angle_error -> Float
                 Angle offset with groundtruth]
+            [size_error -> Float
+                Size offset with groundtruth]
     """
     kps = res['locations']
     if 'angles' in res:
         res_angles = res['angles']
+    if 'sizes' in res:
+        res_sizes = res['sizes']
 
     locations = [x.data for x in anns['locations']]
     labels = [x.data for x in anns['labels']]
     angles = [x.data for x in anns['angles']]
+    sizes = [x.data for x in anns['sizes']]
     assert len(kps) == len(locations)
 
     offset = AverageMeter()
     precision = AverageMeter()
     recall = AverageMeter()
     if 'angles' in res:
-        angle_dis = AverageMeter()
+        angle_error = AverageMeter()
+    if 'sizes' in res:
+        size_error = AverageMeter()
 
     n_batch = len(kps)
     n_cls = len(kps[0])
@@ -84,7 +92,9 @@ def eval_key_points(res, anns, size=40):
         for j in range(n_cls):
             dets = kps[i][j]
             tars = locations[i][labels[i] == j]
+            # TODO: Whether raise except?
             tar_angle = angles[i][labels[i] == j]
+            tar_size = sizes[i][labels[i] == j]
 
             n_dets = len(dets)
             n_tars = tars.shape[0]
@@ -105,8 +115,13 @@ def eval_key_points(res, anns, size=40):
                         # angle
                         if 'angles' in res:
                             angle_off = abs(res_angles[i][j][i_d] - tar_angle[i_t])
-                            angle_dis.update(min(angle_off, 360-angle_off))
+                            angle_error.update(min(angle_off, 360-angle_off))
                             # cprint(f"res_angle: {res_angles[i][j][i_d]}    tar_angle: {tar_angle[i_t]}", level='debug')
+                        # size
+                        if 'sizes' in res:
+                            size_error.update(abs(res_sizes[i][j][i_d] - tar_size[i_t]))
+                            # cprint(f"res_size: {res_sizes[i][j][i_d]}    tar_angle: {tar_size[i_t]}", level='debug')
+
                         visit.append(i_t)
                         break
             precision.update(1, ok)
@@ -114,10 +129,12 @@ def eval_key_points(res, anns, size=40):
             recall.update(1, ok)
             recall.update(0, n_tars-ok)
 
+    out_dict = dict(dis=offset, precision=precision, recall=recall)
     if 'angles' in res:
-        return dict(dis=offset, precision=precision, recall=recall, angle_dis=angle_dis)
-    else:
-        return dict(dis=offset, precision=precision, recall=recall)
+        out_dict['angle_error'] = angle_error
+    if 'sizes' in res:
+        out_dict['size_error'] = size_error
+    return out_dict
 
 
 def is_in_range(p1, p2, size):
@@ -272,6 +289,27 @@ def get_kps_from_heatmap(results, threshold=0.5, size=40):
         angles.append(angle)
 
     out['angles'] = angles
+
+    # size
+    if 'sizes' in results:
+        size_map = results['sizes']
+
+    sizes = []
+    for i in range(batch):
+        size = []
+        for j in range(num_cls):
+            res = []
+            for p in keypoints[i][j]:
+                x, y = p[0], p[1]
+                if 'sizes' in results:
+                    s = size_map[i, 0, y, x]
+                else:
+                    s = -1
+                res.append(s)
+            size.append(res)
+        sizes.append(size)
+
+    out['sizes'] = sizes
 
     return out
 

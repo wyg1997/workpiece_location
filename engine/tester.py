@@ -49,6 +49,7 @@ class Tester:
         eval_p = AverageMeter()
         eval_r = AverageMeter()
         eval_angle_error = AverageMeter()
+        eval_size_error = AverageMeter()
 
         for i, data in enumerate(BackgroundGenerator(tqdm(self.test_dataloader,
                                                           desc=f"Testing"))):
@@ -71,15 +72,15 @@ class Tester:
                 ori_imgs = resume_imgs(ori_imgs, self.cfg.TEST.MEAN, self.cfg.TEST.STD)
                 res_img = vis_results(np.copy(ori_imgs), kps, self.classes, self.cfg.VISDOM.SHOW_INFO)
 
-                # save results
-                save_img = res_img.transpose(0, 2, 3, 1)
-                for i_img in range(res_img.shape[0]):
-                    self.save_cnt += 1
-                    cv2.imwrite(osp.join(self.save_dir, f"{self.save_cnt}.png"), save_img[i_img, :, :, ::-1])
+                # # save results
+                # save_img = res_img.transpose(0, 2, 3, 1)
+                # for i_img in range(res_img.shape[0]):
+                #     self.save_cnt += 1
+                #     cv2.imwrite(osp.join(self.save_dir, f"{self.save_cnt}.png"), save_img[i_img, :, :, ::-1])
 
-                # # show results
-                # self.vis.images(res_img, win=f"test_results[{i}]",
-                #                 opts=dict(title=f"test_results[{i}]"))
+                # show results
+                self.vis.images(res_img, win=f"test_results[{i}]",
+                                opts=dict(title=f"test_results[{i}]"))
 
                 # # heatmap
                 # heat_img = vis_heatmaps(np.copy(ori_imgs), results['locations'], alpha=0.5)
@@ -92,12 +93,15 @@ class Tester:
             eval_p.update(eval_res['precision'].avg, eval_res['precision'].count)
             eval_r.update(eval_res['recall'].avg, eval_res['recall'].count)
             if 'angles' in self.task:
-                eval_angle_error.update(eval_res['angle_dis'].avg, eval_res['angle_dis'].count)
+                eval_angle_error.update(eval_res['angle_error'].avg, eval_res['angle_error'].count)
+            if 'sizes' in self.task:
+                eval_size_error.update(eval_res['size_error'].avg, eval_res['size_error'].count)
 
         self.logger.info(
             f"Eval result: "
             f"dis_error: {eval_dis.avg:.2f} | "
             f"angle_error: {-1 if 'angles' not in self.task else eval_angle_error.avg:.4f} | "
+            f"size_error: {-1 if 'sizes' not in self.task else eval_size_error.avg:.2f} | "
             f"precision: {eval_p.sum:.0f}/{eval_p.count}={eval_p.avg:.2%} | "
             f"recall: {eval_r.sum:.0f}/{eval_r.count}={eval_r.avg:.2%}")
 
@@ -112,6 +116,11 @@ class Tester:
                       win='test_angle_error',
                       update=None if self.test_cnt == 1 else 'append',
                       opts=dict(title='test_angle_error'))
+        self.vis.line(Y=np.array([eval_size_error.avg]),
+                      X=np.array([self.test_cnt]),
+                      win='test_size_error',
+                      update=None if self.test_cnt == 1 else 'append',
+                      opts=dict(title='test_size_error'))
         self.vis.line(Y=np.array([eval_p.avg]),
                       X=np.array([self.test_cnt]),
                       win='test_precision',

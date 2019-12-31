@@ -4,10 +4,8 @@
 import random
 import math
 
-import torchvision.transforms as T
 from torchvision.transforms import ColorJitter, ToPILImage
 import cv2
-import torch
 import numpy as np
 from utils.cprint import cprint
 
@@ -25,7 +23,7 @@ def resume_imgs(imgs, mean, std):
         imgs: Numpy in range(0, 255) with shape [n, h, w, c].
     """
     imgs = imgs.numpy()
-    imgs = imgs.transpose(0, 2, 3, 1) # to [n, h, w, c]
+    imgs = imgs.transpose(0, 2, 3, 1)  # to [n, h, w, c]
     imgs = (imgs*std + mean)*255
     imgs = imgs.astype(np.uint8)
     return imgs
@@ -119,8 +117,16 @@ class Pipline:
                 ann,
                 img_size,
                 self.stride,
-                self.cfg.SIGMA * scale_factor,
-                num_cls
+                self.cfg.SIGMA * scale_factor
+            )
+
+        # size maps [n, 1, h, w]
+        if self.is_train and self.train_size:
+            targets['sizes'] = self.get_size_targets(
+                ann,
+                img_size,
+                self.stride,
+                self.cfg.SIGMA * scale_factor
             )
 
         return dict(imgs=img,
@@ -129,8 +135,8 @@ class Pipline:
                     anns=ann)
 
     def remove_out_points(self, ann, img_size):
-        idx = np.where((ann['locations'].data[:, 1]<=img_size[0]-1)& \
-                       (ann['locations'].data[:,0]<=img_size[1]))
+        idx = np.where((ann['locations'].data[:, 1] <= img_size[0]-1) & \
+                       (ann['locations'].data[:, 0] <= img_size[1]))
 
         ann['locations'].data = ann['locations'].data[idx]
         ann['sizes'].data = ann['sizes'].data[idx]
@@ -138,6 +144,52 @@ class Pipline:
         ann['labels'].data = ann['labels'].data[idx]
         return ann
 
+    def get_size_target(self, center, radius, size, stride, sigma):
+        """
+        根据一个中心点和一个半径，生成尺度图。
+        """
+        H, W = size
+        map_h = H // stride
+        map_w = W // stride
+
+        start = stride / 2.0 - 0.5
+        y_range = range(map_h)
+        x_range = range(map_w)
+        xx, yy = np.meshgrid(x_range, y_range)
+        xx = xx*stride + start
+        yy = yy*stride + start
+
+        d2 = (xx-center[0])**2 + (yy-center[1])**2
+        exponent = d2 / 2.0 / sigma / sigma
+        exponent = np.exp(-exponent)
+        mask = exponent > 0.5
+
+        size_map = np.zeros((map_h, map_w, 1)).astype(np.float32) - 1  # [h, w, 1]
+        size_map[mask] = radius
+
+        size_map = size_map.transpose(2, 0, 1)  # [1, h, w]
+        return size_map
+
+    def get_size_targets(self, ann, size, stride, sigma):
+        """
+        根据中心点生成尺度地图，-1表示忽略的点。
+
+        Outputs:
+            angle_maps: shape [n, 1, h, w].
+        """
+        H, W = size
+        points = ann['locations'].data
+        sizes = ann['sizes'].data
+        num_points = points.shape[0]
+
+        size_maps = np.zeros((1, H//stride, W//stride)).astype(np.float32) - 1
+
+        for i in range(num_points):
+            radius = sizes[i]
+            size_map = self.get_size_target(points[i], radius, size, stride, sigma)
+            size_maps = np.maximum(size_maps, size_map)
+
+        return size_maps
 
     def get_angle_target(self, center, angle, size, stride, sigma):
         """
@@ -157,7 +209,7 @@ class Pipline:
         d2 = (xx-center[0])**2 + (yy-center[1])**2
         exponent = d2 / 2.0 / sigma / sigma
         exponent = np.exp(-exponent)
-        mask = exponent>0.5
+        mask = exponent > 0.5
 
         angle = angle / 180 * math.pi
         angle_map = np.zeros((map_h, map_w, 8)).astype(np.float32) - 1  # [h, w, 8]
@@ -170,30 +222,26 @@ class Pipline:
         angle_map = angle_map.transpose(2, 0, 1)  # [8, h, w]
         return angle_map
 
-
-    def get_angle_targets(self, ann, size, stride, sigma, num_cls):
+    def get_angle_targets(self, ann, size, stride, sigma):
         """
         根据中心点生成角度地图，-1表示忽略的点。
 
         Outputs:
-            angle_maps: shape [n, 2, h, w].
+            angle_maps: shape [n, 8, h, w].
         """
         H, W = size
         points = ann['locations'].data
         angles = ann['angles'].data
-        labels = ann['labels'].data
         num_points = points.shape[0]
 
         angle_maps = np.zeros((8, H//stride, W//stride)).astype(np.float32) - 1
 
         for i in range(num_points):
-            label = labels.data[i]
             angle = angles[i]
             angle_map = self.get_angle_target(points[i], angle, size, stride, sigma)
             angle_maps = np.maximum(angle_maps, angle_map)
 
         return angle_maps
-
 
     def get_gussian_target(self, center, size, stride, sigma):
         """
@@ -219,7 +267,7 @@ class Pipline:
         d2 = (xx-center[0])**2 + (yy-center[1])**2
         exponent = d2 / 2.0 / sigma / sigma
         heatmap = np.exp(-exponent).astype(np.float32)
-        heatmap[heatmap<0.01] = 0
+        heatmap[heatmap < 0.01] = 0
         return heatmap
 
     def get_gussian_targets(self, ann, size, stride, sigma, num_cls):
@@ -342,7 +390,7 @@ class Flip:
     Flip images and annotations(including location and angle).
 
     Param:
-        prob: The probability 
+        prob: The probability
 
     Input:
         sample: A dict including target which will be processed.
@@ -452,7 +500,7 @@ class Scale:
     def _scale_ann(self, ann, factor, shift):
         """
         Input:
-            ann: Dict 
+            ann: Dict
             factor: Float
             shift: List with [shift_x, shift_y] means shift right and down.
         """

@@ -2,6 +2,7 @@
 # coding=utf-8
 
 import torch
+import torch.nn.functional as F
 
 from utils.cprint import cprint
 
@@ -33,5 +34,15 @@ def angle_loss_func(output, target, mask):
             loss = (1 - (output[i, mask[i]].reshape(-1, 2) * target[i, mask[i]].reshape(-1, 2)).sum(axis=1)).sum()
         else:
             loss += (1 - (output[i, mask[i]].reshape(-1, 2) * target[i, mask[i]].reshape(-1, 2)).sum(axis=1)).sum()
+    return loss / batch_size
+
+
+def size_loss_func(output, target, mask):
+    batch_size = output.shape[0]
+
+    if output[mask].sum().item() > 0:
+        loss = F.smooth_l1_loss(output[mask] / target[mask], torch.ones(output[mask].shape).cuda())
+    else:
+        loss = 0
     return loss / batch_size
 

@@ -74,14 +74,21 @@ class InitialStage(nn.Module):
             conv(num_channels, num_channels, bn=False),
             conv(num_channels, num_channels, bn=False)
         )
+        # locations
         self.heatmaps = nn.Sequential(
             conv(num_channels, 512, kernel_size=1, padding=0, bn=False),
             conv(512, num_heatmaps, kernel_size=1, padding=0, bn=False, relu=False)
         )
+        # angles
         self.angle_maps = nn.Sequential(
             conv(num_channels, 512, kernel_size=1, padding=0, bn=False),
             conv(512, 8, kernel_size=1, padding=0, bn=False, relu=False)
         ) if train_angle else None
+        # sizes
+        self.size_maps = nn.Sequential(
+            conv(num_channels, 512, kernel_size=1, padding=0, bn=False),
+            conv(512, 1, kernel_size=1, padding=0, bn=False, relu=False)
+        ) if train_size else None
 
     def forward(self, x):
         trunk_features = self.trunk(x)
@@ -93,6 +100,9 @@ class InitialStage(nn.Module):
         if self.angle_maps is not None:
             outputs['angles'] = self.angle_maps(trunk_features)
             outputs['angles'] = angle_l2_norm(outputs['angles'])
+        # size
+        if self.size_maps is not None:
+            outputs['sizes'] = self.size_maps(trunk_features)
 
         return outputs
 
@@ -122,14 +132,21 @@ class RefinementStage(nn.Module):
             RefinementStageBlock(out_channels, out_channels),
             RefinementStageBlock(out_channels, out_channels)
         )
+        # location
         self.heatmaps = nn.Sequential(
             conv(out_channels, out_channels, kernel_size=1, padding=0, bn=False),
             conv(out_channels, num_heatmaps, kernel_size=1, padding=0, bn=False, relu=False)
         )
+        # angle
         self.angle_maps = nn.Sequential(
             conv(out_channels, out_channels, kernel_size=1, padding=0, bn=False),
             conv(out_channels, 8, kernel_size=1, padding=0, bn=False, relu=False)
         ) if train_angle else None
+        # size
+        self.size_maps = nn.Sequential(
+            conv(out_channels, out_channels, kernel_size=1, padding=0, bn=False),
+            conv(out_channels, 1, kernel_size=1, padding=0, bn=False, relu=False)
+        ) if train_size else None
 
     def forward(self, x):
         trunk_features = self.trunk(x)
@@ -141,6 +158,9 @@ class RefinementStage(nn.Module):
         if self.angle_maps is not None:
             outputs['angles'] = self.angle_maps(trunk_features)
             outputs['angles'] = angle_l2_norm(outputs['angles'])
+        # size
+        if self.size_maps is not None:
+            outputs['sizes'] = self.size_maps(trunk_features)
         return outputs
 
 
