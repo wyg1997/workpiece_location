@@ -113,7 +113,7 @@ def vis_results(imgs, results, classes, show_info=False):
                 # size
                 size = results['sizes'][i][j][idx]
                 if size == -1:
-                    size = 40
+                    size = 20
                 x, y, score = p
                 label = j
                 color = [int(x*255) for x in _COLOR[label]]

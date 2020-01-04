@@ -75,8 +75,10 @@ class Tester:
                 # # save results
                 # save_img = res_img.transpose(0, 2, 3, 1)
                 # for i_img in range(res_img.shape[0]):
+                #     cv2.imwrite(osp.join(self.save_dir,
+                #                          f"{self.dataset.img_ids[self.save_cnt]}.png"),
+                #                 save_img[i_img, :, :, ::-1])
                 #     self.save_cnt += 1
-                #     cv2.imwrite(osp.join(self.save_dir, f"{self.save_cnt}.png"), save_img[i_img, :, :, ::-1])
 
                 # show results
                 self.vis.images(res_img, win=f"test_results[{i}]",
