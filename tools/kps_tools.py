@@ -221,7 +221,7 @@ def get_kps_from_heatmap(results, threshold=0.5, size=40):
 
     Input:
         heatmap -> Dict('location': np.array[n, k, h, w],
-                        ['angle': np.array[n, 2, h, w]])
+                        ['angle': np.array[n, 8, h, w]])
             The outputs from network.
         threshold -> Float
             The threshold for bg and fg.
