@@ -9,6 +9,7 @@ import numpy as np
 
 from utils.cprint import cprint
 from utils.meters import AverageMeter
+from utils.points import Point
 
 
 def resize_heatmaps(heatmaps, stride):
@@ -41,10 +42,8 @@ def eval_key_points(res, anns, size=40):
     Compare detection results with groundtruth.
 
     Inputs:
-        res -> dict('location': keypoints, ['angle': angles])
-            keypoints -> list with shape [n, k, m, 3]
-                All keypoints in heatmap with [x, y, score].
-            [angles -> list with shape [n, k, m, 1]]
+        res -> List with shape [batch, m].
+            `m` means number of keypoints defined in `utils/points.py`
         anns -> dict('locations': <ndarray> (n, m, 2),
                      'labels': <ndarray> (n, m),
                      ...)
@@ -64,77 +63,60 @@ def eval_key_points(res, anns, size=40):
             [size_error -> Float
                 Size offset with groundtruth]
     """
-    kps = res['locations']
-    if 'angles' in res:
-        res_angles = res['angles']
-    if 'sizes' in res:
-        res_sizes = res['sizes']
-
+    # groundtruth
     locations = [x.data for x in anns['locations']]
     labels = [x.data for x in anns['labels']]
     angles = [x.data for x in anns['angles']]
     sizes = [x.data for x in anns['sizes']]
-    assert len(kps) == len(locations)
 
-    offset = AverageMeter()
+    # eval results
     precision = AverageMeter()
     recall = AverageMeter()
-    if 'angles' in res:
-        angle_error = AverageMeter()
-    if 'sizes' in res:
-        size_error = AverageMeter()
+    offset = AverageMeter()
+    angle_error = AverageMeter()
+    size_error = AverageMeter()
 
-    n_batch = len(kps)
-    n_cls = len(kps[0])
-
-    # for i -> batch, j -> class, i_d -> detection, i_t -> groundtruth
+    n_batch = len(res)
+    # for i -> batch, j -> kps, k -> groundtruth
     for i in range(n_batch):
-        for j in range(n_cls):
-            dets = kps[i][j]
-            tars = locations[i][labels[i] == j]
-            # TODO: Whether raise except?
-            tar_angle = angles[i][labels[i] == j]
-            tar_size = sizes[i][labels[i] == j]
+        kps = res[i]
+        tar_locations = locations[i]
+        tar_angles = angles[i]
+        tar_sizes = sizes[i]
+        tar_labels = labels[i]
 
-            n_dets = len(dets)
-            n_tars = tars.shape[0]
+        vis = []
+        ok = 0
 
-            ok = 0
-            visit = []
-            for i_d in range(n_dets):
-                for i_t in range(n_tars):
-                    # continue if it have been hitted
-                    if i_t in visit:
-                        continue
-                    if is_in_range(dets[i_d], tars[i_t], size):
-                        ok += 1
-                        # dis
-                        dis = math.sqrt(
-                            calc_distance_square(dets[i_d], tars[i_t]))
-                        offset.update(dis)
-                        # angle
-                        if 'angles' in res:
-                            angle_off = abs(res_angles[i][j][i_d] - tar_angle[i_t])
-                            angle_error.update(min(angle_off, 360-angle_off))
-                            # cprint(f"res_angle: {res_angles[i][j][i_d]}    tar_angle: {tar_angle[i_t]}", level='debug')
-                        # size
-                        if 'sizes' in res:
-                            size_error.update(abs(res_sizes[i][j][i_d] - tar_size[i_t]))
-                            # cprint(f"res_size: {res_sizes[i][j][i_d]}    tar_angle: {tar_size[i_t]}", level='debug')
+        n_kps = len(kps)
+        n_gts = len(tar_locations)
+        for j in range(n_kps):
+            p = kps[j]
+            for k in range(n_gts):
+                # different class, continue
+                if k in vis or tar_labels[k] != p.cls:
+                    continue
+                if is_in_range((p.x, p.y), tar_locations[k], size):
+                    ok += 1
+                    # dis
+                    dis = math.sqrt(calc_distance_square((p.x, p.y), tar_locations[k]))
+                    offset.update(dis)
+                    # angle
+                    if p.angle != -1:
+                        angle_off = abs(p.angle - tar_angles[k])
+                        angle_error.update(min(angle_off, 360-angle_off))
+                    # size
+                    if p.radius != -1:
+                        size_error.update(abs(p.radius - tar_sizes[k]))
+                    vis.append(k)
+                    break
+        precision.update(1, ok)
+        precision.update(0, n_kps-ok)
+        recall.update(1, ok)
+        recall.update(0, n_gts-ok)
 
-                        visit.append(i_t)
-                        break
-            precision.update(1, ok)
-            precision.update(0, n_dets-ok)
-            recall.update(1, ok)
-            recall.update(0, n_tars-ok)
-
-    out_dict = dict(dis=offset, precision=precision, recall=recall)
-    if 'angles' in res:
-        out_dict['angle_error'] = angle_error
-    if 'sizes' in res:
-        out_dict['size_error'] = size_error
-    return out_dict
+    return dict(dis=offset, precision=precision, recall=recall,
+                angle_error=angle_error, size_error=size_error)
 
 
 def is_in_range(p1, p2, size):
@@ -221,7 +203,8 @@ def get_kps_from_heatmap(results, threshold=0.5, size=40):
 
     Input:
         heatmap -> Dict('location': np.array[n, k, h, w],
-                        ['angle': np.array[n, 8, h, w]])
+                        ['angles': np.array[n, 8, h, w]],
+                        ['sizes': np.array[n, 1, h, w]])
             The outputs from network.
         threshold -> Float
             The threshold for bg and fg.
@@ -229,18 +212,19 @@ def get_kps_from_heatmap(results, threshold=0.5, size=40):
             The size of points used in nms.
 
     Output:
-        out -> dict('location': keypoints, ['angle': angles])
-            keypoints -> list with shape [n, k, m, 3]
-                All keypoints in heatmap with [x, y, score].
-            [angles -> list with shape [n, k, m, 1]]
+        keypoints -> List with shape [batch, m].
+            `m` means number of keypoints defined in `utils/points.py`
     """
-    out = {}
-
-    # location
     keypoints = []
 
     heatmap = results['locations']
     batch, num_cls, h, w = heatmap.shape
+    # angle map
+    if 'angles' in results:
+        angle_map = results['angles']
+    # size map
+    if 'sizes' in results:
+        size_map = results['sizes']
 
     # points
     for i in range(batch):
@@ -258,21 +242,11 @@ def get_kps_from_heatmap(results, threshold=0.5, size=40):
                 # get key points by nms
                 res = nms_points(xx, yy, score, size)
 
-            kps.append(res)
-        keypoints.append(kps)
-    out['locations'] = keypoints
-
-    # angles
-    if 'angles' in results:
-        angle_map = results['angles']
-
-    angles = []
-    for i in range(batch):
-        angle = []
-        for j in range(num_cls):
-            res = []
-            for p in keypoints[i][j]:
-                x, y = p[0], p[1]
+            # save results
+            for p in res:
+                x, y, score = p
+                cls = j
+                # angle
                 if 'angles' in results:
                     list_sin = []
                     list_cos = []
@@ -284,32 +258,14 @@ def get_kps_from_heatmap(results, threshold=0.5, size=40):
                     a = error_exclude(list_sin, list_cos)
                 else:
                     a = -1
-                res.append(a)
-            angle.append(res)
-        angles.append(angle)
-
-    out['angles'] = angles
-
-    # size
-    if 'sizes' in results:
-        size_map = results['sizes']
-
-    sizes = []
-    for i in range(batch):
-        size = []
-        for j in range(num_cls):
-            res = []
-            for p in keypoints[i][j]:
-                x, y = p[0], p[1]
+                # size
                 if 'sizes' in results:
-                    s = size_map[i, 0, y, x]
+                    r = size_map[i, 0, y, x]
                 else:
-                    s = -1
-                res.append(s)
-            size.append(res)
-        sizes.append(size)
+                    r = -1
+                point = Point(x=x, y=y, score=score, radius=r, angle=a, cls=cls, from_net=True)
+                kps.append(point)
+        keypoints.append(kps)
 
-    out['sizes'] = sizes
-
-    return out
+    return keypoints
 

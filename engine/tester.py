@@ -94,10 +94,8 @@ class Tester:
             eval_dis.update(eval_res['dis'].avg, eval_res['dis'].count)
             eval_p.update(eval_res['precision'].avg, eval_res['precision'].count)
             eval_r.update(eval_res['recall'].avg, eval_res['recall'].count)
-            if 'angles' in self.task:
-                eval_angle_error.update(eval_res['angle_error'].avg, eval_res['angle_error'].count)
-            if 'sizes' in self.task:
-                eval_size_error.update(eval_res['size_error'].avg, eval_res['size_error'].count)
+            eval_angle_error.update(eval_res['angle_error'].avg, eval_res['angle_error'].count)
+            eval_size_error.update(eval_res['size_error'].avg, eval_res['size_error'].count)
 
         self.logger.info(
             f"Eval result: "

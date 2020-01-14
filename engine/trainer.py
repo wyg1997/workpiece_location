@@ -198,16 +198,12 @@ class Trainer:
             p = eval_res['precision']
             r = eval_res['recall']
             # angle error
-            if 'angles' in self.task:
-                angle_error = eval_res['angle_error']
-            else:
-                angle_error = AverageMeter()
+            angle_error = eval_res['angle_error']
+            if angle_error.count == 0:
                 angle_error.update(-1)
             # size error
-            if 'sizes' in self.task:
-                size_error = eval_res['size_error']
-            else:
-                size_error = AverageMeter()
+            size_error = eval_res['size_error']
+            if size_error.count == 0:
                 size_error.update(-1)
 
             loss = loss.item()

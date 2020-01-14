@@ -74,7 +74,7 @@ def vis_anns(imgs, ann, classes, show_info=False):
         num_point = labels[i].data.shape[0]
 
         for j in range(num_point):
-            size = sizes[i].data[j]
+            size = int(sizes[i].data[j] + 0.5)
             label = labels[i].data[j]
             color = [int(x*255) for x in _COLOR[label]]
             angle = angles[i].data[j]
@@ -92,35 +92,29 @@ def vis_results(imgs, results, classes, show_info=False):
 
     Inputs:
         imgs: numpy images with shape [n, h, w, c].
-        results -> dict('location': keypoints, ['angle': angles])
-            keypoints -> list with shape [n, k, m, 3]
-                All keypoints in heatmap with [x, y, score].
-            [angles -> list with shape [n, k, m, 1]]
+        results -> List with shape [batch, m] (see tools/kps_tools.py)
 
     Outputs:
         imgs: Images will be showed with shape [n, c, h, w] with type numpy.
     """
-    batch = len(results['locations'])
-    num_cls = len(results['locations'][0])
+    batch = len(results)
 
     for i in range(batch):
-        for j in range(num_cls):
-            for idx, p in enumerate(results['locations'][i][j]):
-                # angle
-                angle = results['angles'][i][j][idx]
-                if angle <= 0:
-                    angle = -1
-                # size
-                size = results['sizes'][i][j][idx]
-                if size == -1:
-                    size = 20
-                x, y, score = p
-                label = j
-                color = [int(x*255) for x in _COLOR[label]]
+        kps = results[i]
+        for idx, p in enumerate(kps):
+            # angle
+            angle = p.angle
+            # size
+            size = int(p.radius + 0.5)
+            if size == -1:
+                size = 20
+            x, y, score = p.x, p.y, p.score
+            label = p.cls
+            color = [int(x*255) for x in _COLOR[label]]
 
-                p1 = (int(x), int(y))
+            p1 = (int(x), int(y))
 
-                imgs[i] = draw_graphic(imgs[i], p1, score, angle, size, color, classes[label], show_info)
+            imgs[i] = draw_graphic(imgs[i], p1, score, angle, size, color, classes[label], show_info)
 
     return imgs.transpose(0, 3, 1, 2)
 
