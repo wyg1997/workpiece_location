@@ -22,9 +22,9 @@ class Point:
             self.cos = 1
 
     def __str__(self):
-        string = ( f"( Point({self.x}, {self.y}): cls= {self.cls}, score= {self.score}, "
-                   f"radius= {self.radius}, angle= {self.angle}, "
-                   f"from_net= {self.from_net} )" )
+        string = ( f"\n\t\t( Point({self.x}, {self.y}): cls={self.cls}, score={self.score}, "
+                   f"radius={self.radius}, angle={self.angle}, "
+                   f"from_net={self.from_net} )" )
         return string
     
     __repr__ = __str__
