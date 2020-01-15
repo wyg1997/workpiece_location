@@ -21,9 +21,11 @@
 pip install -r requirements.txt
 ```
 
-#### 设置参数
+#### 标注、设置参数、定义模板
 
-参数文件的涵义见[configs/config_example.yml](configs/config_example.yml)。
+- 标注文件的格式见[file_example/label_example.xml](file_example/label_example.xml)。
+- 参数文件的涵义见[file_example/config_example.yml](file_example/config_example.yml)。
+- 模板文件的涵义见[file_example/template_example.xml](file_example/template_example.xml)。
 
 #### 标注工具
 

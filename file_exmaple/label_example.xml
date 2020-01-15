@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='utf-8'?>
+<annotation>
+	<size>
+		<width>3</width>
+		<height>2448</height>
+	</size>
+	<point>
+		<name>lb</name>
+		<location>
+			<x>525</x>
+			<y>1473</y>
+		</location>
+		<size>40</size>
+		<angle>90.71</angle>
+	</point>
+	<point>
+		<name>lt</name>
+		<location>
+			<x>514</x>
+			<y>585</y>
+		</location>
+		<size>40</size>
+		<angle>0.84</angle>
+	</point>
+	<point>
+		<name>rt</name>
+		<location>
+			<x>1679</x>
+			<y>568</y>
+		</location>
+		<size>40</size>
+		<angle>271.51</angle>
+	</point>
+	<point>
+		<name>rb</name>
+		<location>
+			<x>1703</x>
+			<y>1476</y>
+		</location>
+		<size>40</size>
+		<angle>179.85</angle>
+	</point>
+</annotation>
