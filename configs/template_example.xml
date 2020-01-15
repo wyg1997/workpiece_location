@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates>
+    <!-- 定义一个或多个模型 -->
+    <object>
+        <!-- 模型的全局参数 -->
+        <global>
+            <!-- 模型最多匹配次数，-1为无限次匹配 -->
+            <multi-match>1</multi-match>
+            <!-- 匹配时允许的偏移 -->
+            <thresh>10</thresh>
+            <!-- 定义模型的缩放搜索范围 -->
+            <scale>
+                <scale-min>100</scale-min>
+                <scale-max>200</scale-max>
+            </scale>
+            <!-- 定义模型的旋转搜索范围 -->
+            <rotate>
+                <rotate-min>-30</rotate-min>
+                <rotate-max>30</rotate-max>
+            </rotate>
+        </global>
+        <!-- 模型点集合 -->
+        <nodes>
+            <!-- 每个点的属性 -->
+            <node>
+                <!-- 绝对坐标 -->
+                <x>0</x>
+                <y>0</y>
+                <!-- 类别 -->
+                <cls>lt</cls>
+                <!-- 半径，-1为不匹配半径 -->
+                <radius>-1</radius>
+                <!-- 角度，-1为不匹配角度 -->
+                <angle>0</angle>
+            </node>
+            <node>
+                <x>1</x>
+                <y>0</y>
+                <cls>rt</cls>
+                <radius>-1</radius>
+                <angle>270</angle>
+            </node>
+            <node>
+                <x>1</x>
+                <y>0.7619</y>
+                <cls>rb</cls>
+                <radius>-1</radius>
+                <angle>180</angle>
+            </node>
+            <node>
+                <x>0</x>
+                <y>0.7551</y>
+                <cls>lb</cls>
+                <radius>-1</radius>
+                <angle>90</angle>
+            </node>
+        </nodes>
+    </object>
+</templates>
