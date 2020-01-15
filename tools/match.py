@@ -21,7 +21,8 @@ def read_model_from_xml(model_path, cat2label):
         settings = obj.find('global')
 
         multi_match = int(settings.find('multi-match').text)
-        thresh = int(settings.find('thresh').text)
+        offset = float(settings.find('offset').text)
+        thresh = float(settings.find('thresh').text)
         # scale
         s = settings.find('scale')
         scale = [
@@ -47,7 +48,7 @@ def read_model_from_xml(model_path, cat2label):
 
             node = Point(x=x, y=y, cls=cls, radius=radius, angle=angle)
             nodes.append(node)
-        temp= Template(multi_match, thresh, scale, rotate, nodes)
+        temp = Template(multi_match, offset, thresh, scale, rotate, nodes)
         templates.append(temp)
 
     return templates
@@ -91,10 +92,13 @@ def single_match(template, kps):
     des = template.compile()
     vec = calc_vector(kps)
 
-    dis_thresh = template.thresh ** 2
+    dis_thresh = template.offset ** 2
     n_trans = template.n_scale * template.n_rotate
     n_node = template.n_node
     n_points = len(kps)
+    need_match = template.thresh * n_node
+    if need_match == n_node:
+        need_match -= 1
 
     group = []
     scores = []
@@ -145,7 +149,7 @@ def single_match(template, kps):
                     res[next_node] = best_ne
                     find += 0 if best_ne == -1 else 1
                     all_dis += min_dis
-                if find > n_node / 2:
+                if find > need_match:
                     group.append(res)
                     scores.append(all_dis)
                     index.append(i)
@@ -163,7 +167,7 @@ def single_match(template, kps):
                 find += 1
             else:
                 group[idx][pos] = -1
-        if find > n_node / 2 and group[idx] not in res:
+        if find > need_match and group[idx] not in res:
             for node in group[idx]:
                 if node != -1:
                     vis_node.append(node)

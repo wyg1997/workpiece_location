@@ -8,8 +8,9 @@ from .points import Point
 
 
 class Template:
-    def __init__(self, multi_match=1, thresh=5, scale=[20, 100], rotate=[-90, 90], nodes=[]):
+    def __init__(self, multi_match=1, offset=0.5, thresh=10, scale=[20, 100], rotate=[-90, 90], nodes=[]):
         self.multi_match = multi_match
+        self.offset = offset
         self.thresh = thresh
         self.scale = scale
         self.rotate = rotate

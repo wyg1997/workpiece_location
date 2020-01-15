@@ -7,7 +7,9 @@
             <!-- 模型最多匹配次数，-1为无限次匹配 -->
             <multi-match>1</multi-match>
             <!-- 匹配时允许的偏移 -->
-            <thresh>10</thresh>
+            <offset>10</offset>
+            <!-- 计算选中点占总点数的比例，若超过此阈值，则认为匹配 -->
+            <thresh>0.5</thresh>
             <!-- 定义模型的缩放搜索范围 -->
             <scale>
                 <scale-min>100</scale-min>
