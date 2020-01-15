@@ -93,7 +93,7 @@ class Trainer:
                          f"loss: {self.running_loss.avg:.5f}")
         # test
         if self.current_epoch % self.cfg.SOLVER.EVAL_EPOCH == 0:
-            self.tester.test(threshold=0.5, show=self.cfg.VISDOM.SHOW_TEST_OUT)
+            self.tester.test(threshold=0.5, show=self.cfg.VISDOM.SHOW_TEST)
         print()
 
     def on_train_end(self):

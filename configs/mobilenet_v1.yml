@@ -83,5 +83,7 @@ VISDOM:
     SHOW_TRAIN_OUT: False
     SHOW_LABEL_HEATMAP: False
     SHOW_TRAIN_HEATMAP: False
+    SHOW_TEST: False
     SHOW_TEST_OUT: False
     SHOW_INFO: True
+    SAVE_RESULTS: False

@@ -72,17 +72,19 @@ class Tester:
                 ori_imgs = resume_imgs(ori_imgs, self.cfg.TEST.MEAN, self.cfg.TEST.STD)
                 res_img = vis_results(np.copy(ori_imgs), kps, self.classes, self.cfg.VISDOM.SHOW_INFO)
 
-                # # save results
-                # save_img = res_img.transpose(0, 2, 3, 1)
-                # for i_img in range(res_img.shape[0]):
-                #     cv2.imwrite(osp.join(self.save_dir,
-                #                          f"{self.dataset.img_ids[self.save_cnt]}.png"),
-                #                 save_img[i_img, :, :, ::-1])
-                #     self.save_cnt += 1
+                if self.cfg.VISDOM.SAVE_RESULTS:
+                    # save results
+                    save_img = res_img.transpose(0, 2, 3, 1)
+                    for i_img in range(res_img.shape[0]):
+                        cv2.imwrite(osp.join(self.save_dir,
+                                             f"{self.dataset.img_ids[self.save_cnt]}.png"),
+                                    save_img[i_img, :, :, ::-1])
+                        self.save_cnt += 1
 
-                # show results
-                self.vis.images(res_img, win=f"test_results[{i}]",
-                                opts=dict(title=f"test_results[{i}]"))
+                if self.cfg.VISDOM.SHOW_TEST_OUT:
+                    # show results
+                    self.vis.images(res_img, win=f"test_results[{i}]",
+                                    opts=dict(title=f"test_results[{i}]"))
 
                 # # heatmap
                 # heat_img = vis_heatmaps(np.copy(ori_imgs), results['locations'], alpha=0.5)
