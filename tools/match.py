@@ -39,8 +39,8 @@ def read_model_from_xml(model_path, cat2label):
         nodes = []
         ns = obj.find('nodes')
         for n in ns.findall('node'):
-            x = int(n.find('x').text)
-            y = int(n.find('y').text)
+            x = float(n.find('x').text)
+            y = float(n.find('y').text)
             cls = cat2label[n.find('cls').text]
             radius = float(n.find('radius').text)
             angle = float(n.find('angle').text)
@@ -176,18 +176,20 @@ def single_match(template, kps):
     for idx in res:
         g = group[idx]
         tr = index[idx]
-        pick = [x for x in g if x != -1]
-        num_pick = len(pick)
         s, a = template.get_affine(index[idx])
         p = template.get_trans_loc(s, a)
 
         temp_base = [0, 0]
         base = [0, 0]
-        for pos in pick:
-            temp_base[0] += p[pos, 0]
-            temp_base[1] += p[pos, 1]
-            base[0] += kps[pos].x
-            base[1] += kps[pos].y
+
+        num_pick = 0
+        for i_node, pos in enumerate(g):
+            if pos != -1:
+                temp_base[0] += p[i_node, 0]
+                temp_base[1] += p[i_node, 1]
+                base[0] += kps[pos].x
+                base[1] += kps[pos].y
+                num_pick += 1
         temp_base[0] /= num_pick
         temp_base[1] /= num_pick
         base[0] /= num_pick
