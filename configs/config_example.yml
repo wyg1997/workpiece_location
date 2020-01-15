@@ -8,6 +8,7 @@ MODEL:
     STRIDE: 4  # 模型输出与输入的尺寸步长，如输入为64*64，步长为4，则输出为16*16
     BACKBONE: 'mobilenet_v1'  # 选择backbone
     PRETRAIN: True  # 是否使用pretrain模型
+    TEMPLATE: 'template.xml'  # 模板路径(相对于name和version的组合路径)
 
 
 # 训练相关参数
@@ -90,4 +91,5 @@ VISDOM:
     SHOW_TEST_OUT: False  # 显示测试结果图
     SHOW_INFO: False  # 显示模型结果时是否显示信息(位置，角度，置信度)
     SAVE_RESULTS: False  # 保存测试结果
+    SHOW_MATCH: False  # 进行模块匹配
 

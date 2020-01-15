@@ -9,6 +9,7 @@ MODEL:
     CHECKPOINT: ''
     ANGLE: True
     SIZE: False
+    TEMPLATE: ''
 
 
 TRAIN:

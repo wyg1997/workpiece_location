@@ -15,7 +15,8 @@ from datasets.transforms import resume_imgs
 from tools.kps_tools import get_kps_from_heatmap, eval_key_points, resize_heatmaps
 from utils.meters import AverageMeter
 from utils.cprint import cprint
-from tools.visualize import vis_heatmaps, vis_results
+from tools.visualize import vis_heatmaps, vis_results, vis_match
+from tools.match import read_model_from_xml, single_match
 
 
 class Tester:
@@ -38,6 +39,10 @@ class Tester:
         self.save_dir = osp.join(self.work_dir, 'results/')
         if not osp.exists(self.save_dir):
             os.makedirs(self.save_dir)
+
+        if self.cfg.VISDOM.SHOW_MATCH:
+            temp_path = osp.join(self.work_dir, self.cfg.MODEL.TEMPLATE)
+            self.templates = read_model_from_xml(temp_path, self.dataset.cat2label)
 
     def test(self, threshold=0.5, show=False):
         self.test_cnt += 1
@@ -70,8 +75,8 @@ class Tester:
             # show results
             if show:
                 ori_imgs = resume_imgs(ori_imgs, self.cfg.TEST.MEAN, self.cfg.TEST.STD)
-                res_img = vis_results(np.copy(ori_imgs), kps, self.classes, self.cfg.VISDOM.SHOW_INFO)
 
+                res_img = vis_results(np.copy(ori_imgs), kps, self.classes, self.cfg.VISDOM.SHOW_INFO)
                 if self.cfg.VISDOM.SAVE_RESULTS:
                     # save results
                     save_img = res_img.transpose(0, 2, 3, 1)
@@ -85,6 +90,18 @@ class Tester:
                     # show results
                     self.vis.images(res_img, win=f"test_results[{i}]",
                                     opts=dict(title=f"test_results[{i}]"))
+
+                if self.cfg.VISDOM.SHOW_MATCH:
+                    all_match = []
+                    for i_batch, points in enumerate(kps):
+                        match_res = []
+                        for temp in self.templates:
+                            match_res.extend(single_match(temp, points))
+                        all_match.append(match_res)
+                    match_img = vis_match(np.copy(ori_imgs), all_match)
+                    self.vis.images(match_img, win=f"match_results[{i}]",
+                                    opts=dict(title=f"match_results[{i}]"))
+
 
                 # # heatmap
                 # heat_img = vis_heatmaps(np.copy(ori_imgs), results['locations'], alpha=0.5)

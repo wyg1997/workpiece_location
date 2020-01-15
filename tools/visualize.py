@@ -16,6 +16,25 @@ from utils.cprint import cprint
 _COLOR = sns.color_palette('Paired', 20)
 
 
+def vis_match(img, match):
+    n_batch = len(match)
+    for i_batch in range(n_batch):
+        # each match
+        for m in match[i_batch]:
+            nodes = []
+            # each point
+            for p in m:
+                # draw
+                nodes.append([[int(p.x+0.5), int(p.y+0.5)]])
+            img[i_batch] = cv2.polylines(img[i_batch],
+                                         [np.array(nodes)],  # shape [1, n, 1, 2]
+                                         isClosed=True,
+                                         color=(0, 191, 255),
+                                         thickness=2).get()
+    img = img.transpose(0, 3, 1, 2)
+    return img
+
+
 def draw_graphic(img, loc, score, angle, size, color, classes, show_info=False):
     font_face = cv2.FONT_HERSHEY_COMPLEX 
     font_scale = 0.5

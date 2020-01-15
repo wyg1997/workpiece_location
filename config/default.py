@@ -27,12 +27,12 @@ _C.MODEL.PRETRAIN = True
 _C.MODEL.CHECKPOINT = ''
 # detect size and angle
 _C.MODEL.ANGLE = False
-# TODO: support detect size
 _C.MODEL.SIZE = False
 # classes
 _C.MODEL.CLASSES = []
 # model stride
 _C.MODEL.STRIDE = 1
+_C.MODEL.TEMPLATE = ''
 
 
 ################
@@ -174,3 +174,4 @@ _C.VISDOM.SHOW_TEST = False
 _C.VISDOM.SHOW_TEST_OUT = False
 _C.VISDOM.SHOW_INFO = False
 _C.VISDOM.SAVE_RESULTS = False
+_C.VISDOM.SHOW_MATCH = False
