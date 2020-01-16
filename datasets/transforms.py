@@ -50,7 +50,7 @@ class Pipline:
         self.train_angle = model_cfg.ANGLE
         self.is_train = is_train
 
-        # include [Resize, Flip, Lighting, Normalize]
+        # include [Resize, Flip, scale, rotate, Lighting, Normalize]
         self.pipline = []
         self.pipline.append(Resize(self.cfg.IMG_SIZE,
                                    pad_color=self.cfg.MEAN,
