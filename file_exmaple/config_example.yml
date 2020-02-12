@@ -24,7 +24,7 @@ TRAIN:
     DO_FLIP: False  # 是否做翻转
     FLIP_PROB: 0.5  # 翻转几率
     DO_SCALE: True  # 是否做缩放处理
-    SCALE_RANGE: [0.8, 1.0]  # 缩放比例范围(只支持缩小操作，即值小于等于1)
+    SCALE_RANGE: [0.8, 1.2]  # 缩放比例范围
     DO_ROTATE: True  # 是否做旋转
     ROTATE_RANGE: [-15.0, 15.0]  # 旋转角度范围
     DO_ALBU: True  # 是否改变光照
