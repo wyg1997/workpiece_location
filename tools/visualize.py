@@ -36,6 +36,8 @@ def vis_match(img, match):
 
 
 def draw_graphic(img, loc, score, angle, size, color, classes, show_info=False):
+    img = img.copy()
+
     font_face = cv2.FONT_HERSHEY_COMPLEX 
     font_scale = 0.5
     thickness = 1
@@ -64,7 +66,7 @@ def draw_graphic(img, loc, score, angle, size, color, classes, show_info=False):
                             (loc[0]+rect[0]+10, loc[1]+10), (30, 144, 255), -1)
         img = cv2.putText(img, text, (loc[0]+10, loc[1]+10),
                           font_face, font_scale, (255, 255, 255), thickness, 16)
-    return img.get()  # UMat to np.array
+    return img
 
 
 
