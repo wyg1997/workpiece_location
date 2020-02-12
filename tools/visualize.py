@@ -126,9 +126,10 @@ def vis_results(imgs, results, classes, show_info=False):
             # angle
             angle = p.angle
             # size
-            size = int(p.radius + 0.5)
-            if size == -1:
-                size = 20
+            if p.radius == -1:
+                size = 5
+            else:
+                size = int(p.radius + 0.5)
             x, y, score = p.x, p.y, p.score
             label = p.cls
             color = [int(x*255) for x in _COLOR[label]]
