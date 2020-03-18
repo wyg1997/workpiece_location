@@ -16,7 +16,7 @@ from tools.kps_tools import get_kps_from_heatmap, eval_key_points, resize_heatma
 from utils.meters import AverageMeter
 from utils.cprint import cprint
 from tools.visualize import vis_heatmaps, vis_results, vis_match
-from tools.match import read_model_from_xml, single_match
+from utils.templates import TemplateMatchTool, read_model_from_xml
 
 
 class Tester:
@@ -41,8 +41,9 @@ class Tester:
             os.makedirs(self.save_dir)
 
         if self.cfg.VISDOM.SHOW_MATCH:
-            temp_path = osp.join(self.work_dir, self.cfg.MODEL.TEMPLATE)
-            self.templates = read_model_from_xml(temp_path, self.dataset.cat2label)
+            tmpl_path = osp.join(self.work_dir, self.cfg.MODEL.TEMPLATE)
+            self.templates = read_model_from_xml(tmpl_path, self.dataset.cat2label)
+            self.template_match_tool = TemplateMatchTool()
 
     def test(self, threshold=0.5, show=False):
         self.test_cnt += 1
@@ -95,8 +96,8 @@ class Tester:
                     all_match = []
                     for i_batch, points in enumerate(kps):
                         match_res = []
-                        for temp in self.templates:
-                            match_res.extend(single_match(temp, points))
+                        for tmpl in self.templates:
+                            match_res.extend(self.template_match_tool.single_match(tmpl, points))
                         all_match.append(match_res)
                     match_img = vis_match(np.copy(ori_imgs), all_match)
                     self.vis.images(match_img, win=f"match_results[{i}]",
