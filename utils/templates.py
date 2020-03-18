@@ -135,7 +135,7 @@ class TemplateMatchTool:
         affine.angle = math.atan2(b, a)
         denom = a*a + b*b
         affine.scale_x = math.sqrt(denom)
-        affine.scale_y = (a*d - c*b) / affine.scale_x
+        affine.scale_y = (a*d - c*b) / (affine.scale_x + 1e-8)
         affine.shear_x = math.atan2(a*c + b*d, denom)
         affine.shift_x = e
         affine.shift_y = f
@@ -186,7 +186,9 @@ class TemplateMatchTool:
             affine_param = self.__get_affine_param(affine_matrix)
 
             # check ratio and shear_x
-            ratio = affine_param.scale_x / (affine_param.scale_y + 1e-8)
+            if affine_param.scale_x <= 0 or affine_param.scale_y <= 0:
+                continue
+            ratio = affine_param.scale_x / affine_param.scale_y
             if max(ratio, 1/ratio) > self.__ratio_thresh or \
                abs(affine_param.shear_x) > self.__shear_thresh:
                 continue
@@ -242,7 +244,7 @@ class TemplateMatchTool:
                     check = False
                     break
             if not check:
-                break
+                continue
             # get result
             loc = np.insert(template.matrix, 2, 1, axis=1) @ affine_matrix  # [n, 2]
             for i, idx in enumerate(ids):
