@@ -71,7 +71,7 @@ class TemplateMatchTool:
         def __str__(self):
             string = f"angle: {self.degree:.3f} | scale_x: {self.scale_x:.3f} | " \
                      f"scale_y: {self.scale_y:.3f} | shear_x: {self.shear_x:.3f} | " \
-                     f"shift_x: {self.shift_x:.3f} | shift_y: {self.shift_y:.3f} | "
+                     f"shift_x: {self.shift_x:.3f} | shift_y: {self.shift_y:.3f}"
             return string
 
         __repr__ = __str__
@@ -92,7 +92,8 @@ class TemplateMatchTool:
 
     def __dfs(self, now_set, vis, got, pos, n_node, point_thresh):
         if pos == n_node:
-            self.__candidate.append(now_set.copy())
+            if got > point_thresh:
+                self.__candidate.append(now_set.copy())
             return None
         # 后面的点都加入点集也不够，直接退出
         if got+n_node-pos < point_thresh:
@@ -186,12 +187,17 @@ class TemplateMatchTool:
             affine_param = self.__get_affine_param(affine_matrix)
 
             # check ratio and shear_x
-            if affine_param.scale_x <= 0 or affine_param.scale_y <= 0:
+            if affine_param.scale_x < 0 or affine_param.scale_y < 0:
                 continue
-            ratio = affine_param.scale_x / affine_param.scale_y
-            if max(ratio, 1/ratio) > self.__ratio_thresh or \
-               abs(affine_param.shear_x) > self.__shear_thresh:
-                continue
+            # the min scale is 1
+            if affine_param.scale_x < 1 or affine_param.scale_y < 1:
+                affine_param.scale_x = max(affine_param.scale_x, 1)
+                affine_param.scale_y = max(affine_param.scale_y, 1)
+            else:
+                ratio = affine_param.scale_x / affine_param.scale_y
+                if max(ratio, 1/ratio) > self.__ratio_thresh or \
+                   abs(affine_param.shear_x) > self.__shear_thresh:
+                    continue
             # check each points' infos
             score = 1.0
             pass_check = True
@@ -353,17 +359,42 @@ if __name__ == '__main__':
     import sys
     sys.path.insert(0, '.')
 
-    cat2label = {'lb': 0, 'lt': 1, 'rt': 2, 'rb': 3}
+    cat2label = {'0': 0, '1': 1, '2': 2}
     templates = read_model_from_xml(
                     '/root/work/workpiece_location/example/type-c/v1/templates_temp.xml',
                     cat2label
                 )
 
     kps = []
-    kps.append(Point(x=50, y=50, cls=1, radius=50, angle=0, from_net=True))
-    kps.append(Point(x=150, y=50, cls=2, radius=50, angle=270, from_net=True))
-    kps.append(Point(x=150, y=100, cls=3, radius=50, angle=180, from_net=True))
-    kps.append(Point(x=50, y=100, cls=0, radius=50, angle=90, from_net=True))
+    # kps.append(Point(x=70, y=70, cls=0, from_net=True))
+    # kps.append(Point(x=170, y=70, cls=1, from_net=True))
+    # kps.append(Point(x=170, y=120, cls=2, from_net=True))
+
+    # kps.append(Point(x=270, y=270, cls=0, from_net=True))
+    # kps.append(Point(x=370, y=270, cls=1, from_net=True))
+    # kps.append(Point(x=370, y=320, cls=2, from_net=True))
+
+    # kps.append(Point(x=100, y=100, cls=1, from_net=True))
+    # kps.append(Point(x=100, y=200, cls=0, from_net=True))
+    # kps.append(Point(x=150, y=100, cls=2, from_net=True))
+
+    # kps.append(Point(x=150, y=300, cls=0, from_net=True))
+    # kps.append(Point(x=240, y=255, cls=1, from_net=True))
+    # kps.append(Point(x=262, y=300, cls=2, from_net=True))
+
+    # kps.append(Point(x=150, y=50, cls=0, from_net=True))
+    # kps.append(Point(x=350, y=50, cls=1, from_net=True))
+    # kps.append(Point(x=350, y=150, cls=2, from_net=True))
+
+    # kps.append(Point(x=300, y=300, cls=2, from_net=True))
+    # kps.append(Point(x=350, y=300, cls=1, from_net=True))
+    # kps.append(Point(x=350, y=200, cls=0, from_net=True))
+
+    # kps.append(Point(x=500, y=100, cls=0, from_net=True))
+    # kps.append(Point(x=500, y=200, cls=1, from_net=True))
+
+    kps.append(Point(x=100, y=200, cls=2, from_net=True))
+    kps.append(Point(x=39, y=139, cls=1, from_net=True))
 
     # cprint(templates[0], level='debug')
     # cprint(kps, level='debug')
@@ -377,3 +408,31 @@ if __name__ == '__main__':
     res = mt.single_match(templates[0], kps)
     cprint(f"match time: {time.time() - st}", level='debug')
     cprint(res, level='debug')
+
+    import cv2
+    def draw_point(img, point):
+        color = (0, 1, 127/255)[::-1]
+        img = cv2.circle(img, (point.x, point.y), 5, color, 1, 1)
+        return img
+
+    h, w = 400, 600
+    img = np.ndarray((h, w, 3))
+    # draw points
+    for p in kps:
+        img = draw_point(img, p)
+    # draw results
+    for group in res:
+        l = len(group)
+        lines = []
+        for p in group:
+            lines.append([int(p.x), int(p.y)])
+        img = cv2.polylines(img,
+                            [np.array(lines)],
+                            isClosed=True,
+                            color=(0.0, 191/255, 1.0)[::-1],
+                            thickness=2)
+
+    img = (img*255).astype(np.int)
+    cv2.imwrite('/root/work/temp/match_demo.png', img)
+    cprint("imwrite ok!", level='warn')
+
