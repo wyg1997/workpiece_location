@@ -22,7 +22,7 @@ class TemplateMatchTool:
         a = scale_x * cos(angle)
         b = scale_x * sin(angle)
         c = shear_x * scale_x * cos(angle) - scale_y * sin(angle)
-        d = shear_y * scale_x * sin(angle) - scale_y * cos(angle)
+        d = shear_y * scale_x * sin(angle) + scale_y * cos(angle)
         e = shift_x
         f = shift_y
     so we can get:
@@ -148,7 +148,7 @@ class TemplateMatchTool:
         matrix[0, 1] = affine.scale_x * math.sin(affine.angle)
         matrix[1, 0] = affine.shear_x * affine.scale_x * math.cos(affine.angle) - \
                        affine.scale_y * math.sin(affine.angle)
-        matrix[1, 1] = -affine.scale_y * math.cos(affine.angle)
+        matrix[1, 1] = affine.scale_y * math.cos(affine.angle)
         matrix[2, 0] = affine.shift_x
         matrix[2, 1] = affine.shift_y
         return matrix

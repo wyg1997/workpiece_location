@@ -73,7 +73,7 @@ is_test_all(yes)->e
    从左到右一共6个矩阵，分别表示：
 
    1. 平移变换。
-   2. 旋转变换。
+   2. 旋转变换(逆时针)。
    3. 缩放(`sx`表示x轴缩放倍数，`sy`表示y轴缩放倍数)。
    4. x错切变换。
    5. 变换前的坐标。
@@ -89,7 +89,7 @@ is_test_all(yes)->e
 
 3. 正反推：
 
-   $$\left \{ \begin{array}{ll} a=sx*cos\theta \\ b=sx*sin\theta \\ c=shearX*sx*cos\theta-sy*sin\theta \\ d=-sy*cos\theta \\ e=tx \\ f=ty \end{array} \right.$$
+   $$\left \{ \begin{array}{ll} a=sx*cos\theta \\ b=sx*sin\theta \\ c=shearX*sx*cos\theta-sy*sin\theta \\ d=sy*cos\theta \\ e=tx \\ f=ty \end{array} \right.$$
 
    $$\left\{ \begin{array}{ll} angle=atan2(b, a) \\ denom(assist)=a^2+b^2 \\ sx=sqrt(denom) \\ sy=(a*d-c*b)/(sx+eps) \\ shearX=atan2(a*c+b*d, denom) \\ tx=e \\ ty=f \end{array}\right.$$
 
