@@ -11,7 +11,11 @@ class Point:
         self.radius = radius
         self.angle = angle
         self.cls = cls
+
+        # template match
         self.from_net = from_net
+        self.shift_x = 0
+        self.shift_y = 0
 
         if angle != -1:
             self.angle_rad = self.angle / 180.0 * math.pi
