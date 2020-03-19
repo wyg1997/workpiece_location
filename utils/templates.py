@@ -90,6 +90,13 @@ class TemplateMatchTool:
         self.__point_set = []
         self.__candidate = []
 
+    # 原点在左上角，vec1向vec2旋转度数，返回弧度制 
+    def __calc_angle_of_vectors(self, vec1, vec2):
+        angle = math.atan2(vec2[1], vec2[0]) - math.atan2(vec1[1], vec1[0])
+        if angle < 0:
+            angle += math.pi * 2
+        return angle
+
     def __dfs(self, now_set, vis, got, pos, n_node, point_thresh):
         if pos == n_node:
             if got > point_thresh:
@@ -183,8 +190,38 @@ class TemplateMatchTool:
                     point_list.append(kps[i_kps])
             pm = self.__point_list_to_matrix(point_list)  # point matrix
             mm = self.__point_list_to_matrix(model_list)  # model matrix
-            affine_matrix = self.__fit_affine_matrix(mm, pm)
-            affine_param = self.__get_affine_param(affine_matrix)
+
+            # 这里特判一下，如果只有两个点，不能用公式求仿射变换矩阵，但可以直接求
+            if pm.shape[0] == 2:
+                '''
+                向量(x1-x0, y1-y0) -> (x3-x2, y3-y2)的变换是：
+                    平移(-x0, -y0)->旋转->缩放->平移(x3, y3)
+
+                缩放比例为(x和y相同，所以用一个s表示):
+                    s = sqrt(((x3-x2)**2 + (y3-y2)**2) / ((x1-x0)**2 + (y1-y0)**2))
+
+                旋转角度可以转化为两个向量求夹角的问题。
+
+                所以变换矩阵为：
+                [ s*cos(angle) -s*sin(angle) -x0*s*cos(angle)+y0*s*sin(angle)+x2
+                  s*sin(angle)  s*cos(angle) -x0*s*sin(angle)-y0*s*cos(angle)+y2 
+                      0              0                        1                 ]
+                '''
+                s = math.sqrt(((pm[0]-pm[1])**2).sum() / ((mm[0]-mm[1])**2).sum())
+                angle = self.__calc_angle_of_vectors(mm[1]-mm[0], pm[1]-pm[0])
+                v_sin = math.sin(angle)
+                v_cos = math.cos(angle)
+                # get affine_param
+                affine_param = self.Affine()
+                affine_param.scale_x = affine_param.scale_y = s
+                affine_param.angle = angle
+                affine_param.shift_x = -mm[0, 0]*s*v_cos + mm[0, 1]*s*v_sin + pm[0, 0]
+                affine_param.shift_y = -mm[0, 0]*s*v_sin - mm[0, 1]*s*v_cos + pm[0, 1]
+                # get affine_matrix
+                affine_matrix = self.__get_affine_matrix(affine_param)
+            else:
+                affine_matrix = self.__fit_affine_matrix(mm, pm)
+                affine_param = self.__get_affine_param(affine_matrix)
 
             # check ratio and shear_x
             if affine_param.scale_x < 0 or affine_param.scale_y < 0:
@@ -366,35 +403,35 @@ if __name__ == '__main__':
                 )
 
     kps = []
-    # kps.append(Point(x=70, y=70, cls=0, from_net=True))
-    # kps.append(Point(x=170, y=70, cls=1, from_net=True))
-    # kps.append(Point(x=170, y=120, cls=2, from_net=True))
+    kps.append(Point(x=70, y=70, cls=0, from_net=True))
+    kps.append(Point(x=170, y=70, cls=1, from_net=True))
+    kps.append(Point(x=170, y=120, cls=2, from_net=True))
 
-    # kps.append(Point(x=270, y=270, cls=0, from_net=True))
-    # kps.append(Point(x=370, y=270, cls=1, from_net=True))
-    # kps.append(Point(x=370, y=320, cls=2, from_net=True))
+    kps.append(Point(x=270, y=270, cls=0, from_net=True))
+    kps.append(Point(x=370, y=270, cls=1, from_net=True))
+    kps.append(Point(x=370, y=320, cls=2, from_net=True))
 
-    # kps.append(Point(x=100, y=100, cls=1, from_net=True))
-    # kps.append(Point(x=100, y=200, cls=0, from_net=True))
-    # kps.append(Point(x=150, y=100, cls=2, from_net=True))
+    kps.append(Point(x=100, y=100, cls=1, from_net=True))
+    kps.append(Point(x=100, y=200, cls=0, from_net=True))
+    kps.append(Point(x=150, y=100, cls=2, from_net=True))
 
-    # kps.append(Point(x=150, y=300, cls=0, from_net=True))
-    # kps.append(Point(x=240, y=255, cls=1, from_net=True))
-    # kps.append(Point(x=262, y=300, cls=2, from_net=True))
+    kps.append(Point(x=150, y=300, cls=0, from_net=True))
+    kps.append(Point(x=240, y=255, cls=1, from_net=True))
+    kps.append(Point(x=262, y=300, cls=2, from_net=True))
 
-    # kps.append(Point(x=150, y=50, cls=0, from_net=True))
-    # kps.append(Point(x=350, y=50, cls=1, from_net=True))
-    # kps.append(Point(x=350, y=150, cls=2, from_net=True))
+    kps.append(Point(x=150, y=50, cls=0, from_net=True))
+    kps.append(Point(x=350, y=50, cls=1, from_net=True))
+    kps.append(Point(x=350, y=150, cls=2, from_net=True))
 
-    # kps.append(Point(x=300, y=300, cls=2, from_net=True))
-    # kps.append(Point(x=350, y=300, cls=1, from_net=True))
-    # kps.append(Point(x=350, y=200, cls=0, from_net=True))
+    kps.append(Point(x=300, y=300, cls=2, from_net=True))
+    kps.append(Point(x=350, y=300, cls=1, from_net=True))
+    kps.append(Point(x=350, y=200, cls=0, from_net=True))
 
-    # kps.append(Point(x=500, y=100, cls=0, from_net=True))
-    # kps.append(Point(x=500, y=200, cls=1, from_net=True))
+    kps.append(Point(x=500, y=100, cls=0, from_net=True))
+    kps.append(Point(x=500, y=200, cls=1, from_net=True))
 
-    kps.append(Point(x=100, y=200, cls=2, from_net=True))
-    kps.append(Point(x=39, y=139, cls=1, from_net=True))
+    kps.append(Point(x=200, y=200, cls=2, from_net=True))
+    kps.append(Point(x=139, y=139, cls=1, from_net=True))
 
     # cprint(templates[0], level='debug')
     # cprint(kps, level='debug')
