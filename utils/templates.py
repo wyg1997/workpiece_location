@@ -99,7 +99,7 @@ class TemplateMatchTool:
 
     def __dfs(self, now_set, vis, got, pos, n_node, point_thresh):
         if pos == n_node:
-            if got > point_thresh:
+            if got >= point_thresh:
                 self.__candidate.append(now_set.copy())
             return None
         # 后面的点都加入点集也不够，直接退出
@@ -164,7 +164,7 @@ class TemplateMatchTool:
         self.__init()
         n_node = template.n_node
         n_kps = len(kps)
-        point_thresh = n_node * template.thresh
+        point_thresh = math.ceil(n_node * template.thresh)
 
         # step 1: get canditate
         for i in range(n_node):
@@ -175,7 +175,7 @@ class TemplateMatchTool:
             self.__point_set.append(s)
         now_set = [-1] * n_node
         vis = [False] * n_kps
-        self.__dfs(now_set, vis, 0, 0, n_node, point_thresh)
+        self.__dfs(now_set, vis, 0, 0, n_node, max(point_thresh, 2))
         if len(self.__candidate) == 0:
             return []
 
@@ -265,7 +265,7 @@ class TemplateMatchTool:
                 continue
             # check locations
             loc_offset = np.insert(mm, 2, 1, axis=1) @ affine_matrix - pm
-            loc_offset = (loc_offset * loc_offset).sum(axis=1)
+            loc_offset = np.sqrt((loc_offset * loc_offset).sum(axis=1))
             if loc_offset.max() > template.offset:
                 continue
             score -= loc_offset.sum() / template.offset / n_node
