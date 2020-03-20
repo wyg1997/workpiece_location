@@ -72,6 +72,10 @@ CUDA_VISIBLE_DEVICE=1 python tools/test.py \
 
 下载后把预训练模型重命名为`mobilenet_v1.pth`，放在工程根目录的`pretrain/`下。
 
+#### TODO
+
+- [ ] 模板匹配时模板的缩放、旋转参数未使用。
+
 ### 附录
 
 #### commit emoji释义
