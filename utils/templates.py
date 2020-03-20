@@ -262,12 +262,12 @@ class TemplateMatchTool:
                             break
                         score -= offset / 10 / n_node
             if not pass_check:
-                break
+                continue
             # check locations
             loc_offset = np.insert(mm, 2, 1, axis=1) @ affine_matrix - pm
             loc_offset = (loc_offset * loc_offset).sum(axis=1)
             if loc_offset.max() > template.offset:
-                break
+                continue
             score -= loc_offset.sum() / template.offset / n_node
             # pass check
             if score >= template.thresh:
