@@ -349,7 +349,7 @@ class Resize:
         target_h, target_w = target_size
 
         # 判断图片长宽的大小关系是否被改变
-        if (h/w >= 1) != (target_h/target_w >= 1):
+        if target_h != target_w and (h/w >= 1) != (target_h/target_w >= 1):
             cprint(f"ReizePipline | Image with shape [{h}, {w}] will "
                    f"resize to [{target_h}, {target_w}]",
                    level='error')

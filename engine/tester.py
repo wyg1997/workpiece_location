@@ -152,5 +152,6 @@ class Tester:
                       update=None if self.test_cnt == 1 else 'append',
                       opts=dict(title='test_recall'))
 
+        self.save_cnt = 0
         self.model.train()
 
